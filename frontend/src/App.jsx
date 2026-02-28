@@ -2,17 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './store/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-
-// ── Placeholder pages (replaced in later steps) ───────────────────────────────
-function DashboardPage() {
-  const { user, logout } = useAuth();
-  return (
-    <div style={{ padding: 32 }}>
-      <h2>Dashboard — Welcome, {user?.name}!</h2>
-      <button onClick={logout}>Log out</button>
-    </div>
-  );
-}
+import DashboardPage from './pages/DashboardPage';
 
 function BoardPage() {
   return <div style={{ padding: 32 }}>Board detail — coming soon.</div>;
