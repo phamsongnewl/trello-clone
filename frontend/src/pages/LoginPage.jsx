@@ -1,0 +1,115 @@
+import { useState } from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Container,
+  Paper,
+  TextField,
+  Typography,
+  Alert,
+  Link,
+} from '@mui/material';
+import { useAuth } from '../store/AuthContext';
+
+export default function LoginPage() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!email.trim() || !password.trim()) {
+      setError('Email and password are required.');
+      return;
+    }
+
+    setIsPending(true);
+    try {
+      await login({ email, password });
+      navigate('/boards');
+    } catch (err) {
+      const message =
+        err.response?.data?.message ?? 'Login failed. Please try again.';
+      setError(message);
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: 'background.default',
+      }}
+    >
+      <Container maxWidth="xs">
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+          {/* Heading */}
+          <Typography variant="h5" fontWeight={700} align="center" mb={3}>
+            Log in to Trello App
+          </Typography>
+
+          {/* Error alert */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {/* Form */}
+          <Box component="form" onSubmit={handleSubmit} noValidate>
+            <TextField
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              fullWidth
+              required
+              autoComplete="email"
+              autoFocus
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              fullWidth
+              required
+              autoComplete="current-password"
+              sx={{ mb: 3 }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              disabled={isPending}
+              sx={{ py: 1.25, fontWeight: 600 }}
+            >
+              {isPending ? 'Logging in…' : 'Log In'}
+            </Button>
+          </Box>
+
+          {/* Register link */}
+          <Typography align="center" variant="body2" mt={2}>
+            Don&apos;t have an account?{' '}
+            <Link component={RouterLink} to="/register" underline="hover">
+              Sign up
+            </Link>
+          </Typography>
+        </Paper>
+      </Container>
+    </Box>
+  );
+}
