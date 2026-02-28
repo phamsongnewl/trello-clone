@@ -1,84 +1,154 @@
 # Trello Clone
 
-A full-stack Trello-inspired project management application built with:
+A full-stack Trello-like project management application built with:
 
-- **Backend:** Node.js · Express · Sequelize · PostgreSQL
-- **Frontend:** React 18 · Vite · Material UI · TanStack Query · @hello-pangea/dnd
-- **Infrastructure:** Docker · Docker Compose · nginx
-
----
-
-## Prerequisites
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose v2)
+- **Frontend** — React 18, MUI v5, @hello-pangea/dnd, TanStack Query
+- **Backend** — Node.js 20, Express, Sequelize ORM, PostgreSQL 16
+- **Infrastructure** — Docker Compose with healthchecks and automatic restart
 
 ---
 
-## Getting Started
+## Quick Start
 
-### 1. Clone the repository
-
-```bash
-git clone <repository-url>
-cd trello
-```
-
-### 2. Configure environment variables
+> **Prerequisites:** [Docker 24+](https://docs.docker.com/get-docker/) with the Compose plugin (v2).
+> No local Node.js or PostgreSQL installation required.
 
 ```bash
+# 1. Clone the repository
+git clone <your-repo-url> trello-clone
+cd trello-clone
+
+# 2. Create the backend environment file
 cp backend/.env.example backend/.env
-```
+#    Edit backend/.env if you want to change any defaults (optional for local dev)
 
-Open `backend/.env` and update the values — especially `DB_PASSWORD` and `JWT_SECRET`.
-
-### 3. Build and start all services
-
-```bash
+# 3. Build images and start all services
 docker compose up --build
+
+# 4. Open the app
+#    → http://localhost:3000
 ```
 
-This starts three containers:
-
-| Container        | Service  | Exposed Port |
-|------------------|----------|--------------|
-| trello_db        | postgres | 5432         |
-| trello_backend   | express  | 5000         |
-| trello_frontend  | nginx    | 3000         |
-
-### 4. Open the app
-
-Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
-
-The frontend proxies all `/api/*` requests to the backend automatically via nginx.
+The first build takes ~2 minutes. Subsequent starts (without `--build`) are instant.
 
 ---
 
-## Useful Commands
+## Port Reference
 
-| Command                          | Description                        |
-|----------------------------------|------------------------------------|
-| `docker compose up --build`      | Build images and start services    |
-| `docker compose up -d`           | Start services in detached mode    |
-| `docker compose down`            | Stop and remove containers         |
-| `docker compose down -v`         | Stop containers and delete volumes |
-| `docker compose logs -f backend` | Tail backend logs                  |
+| Service  | Host port | Container port | Description                      |
+| -------- | --------- | -------------- | -------------------------------- |
+| frontend | 3000      | 80             | React app (nginx)                |
+| backend  | 5000      | 5000           | REST API (Express)               |
+| db       | —         | 5432           | PostgreSQL (not exposed to host) |
 
 ---
 
 ## Project Structure
 
 ```
-trello/
-├── backend/          # Express REST API
-│   ├── src/          # Application source code
-│   ├── .env.example  # Environment variable template
-│   ├── Dockerfile
-│   └── package.json
-├── frontend/         # React SPA
-│   ├── src/          # Application source code
-│   ├── nginx.conf    # nginx reverse-proxy config
-│   ├── Dockerfile
-│   └── package.json
+trello-clone/
+├── backend/
+│   ├── src/
+│   │   ├── config/          # Sequelize DB config
+│   │   ├── controllers/     # Route handlers
+│   │   ├── middleware/      # Auth, error handling
+│   │   ├── models/          # Sequelize models
+│   │   └── routes/          # Express routers
+│   ├── .env.example         # Environment variable template
+│   └── Dockerfile
+├── frontend/
+│   ├── src/
+│   │   ├── api/             # Axios API client
+│   │   ├── components/      # Reusable UI components
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── pages/           # Page-level components
+│   │   └── store/           # Auth context
+│   ├── nginx.conf           # Nginx config (used in Docker)
+│   └── Dockerfile
 ├── docker-compose.yml
 └── README.md
 ```
+
+---
+
+## Environment Variables
+
+All backend configuration lives in `backend/.env`.
+
+| Variable      | Default                                         | Description                          |
+| ------------- | ----------------------------------------------- | ------------------------------------ |
+| `DB_HOST`     | `db`                                            | Postgres service name (Docker DNS)   |
+| `DB_PORT`     | `5432`                                          | Postgres port                        |
+| `DB_NAME`     | `trellodb`                                      | Database name                        |
+| `DB_USER`     | `postgres`                                      | Database user                        |
+| `DB_PASSWORD` | `postgres123`                                   | Database password — **change this!** |
+| `PORT`        | `5000`                                          | Backend HTTP port                    |
+| `NODE_ENV`    | `production`                                    | Node environment                     |
+| `JWT_SECRET`  | `your-very-secret-jwt-key-change-in-production` | JWT signing secret — **change this!**|
+| `CORS_ORIGIN` | `http://localhost:3000`                         | Allowed CORS origin                  |
+
+---
+
+## Development Workflow
+
+### Watch logs from all services
+
+```bash
+docker compose logs -f
+```
+
+### Watch logs from a specific service
+
+```bash
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f db
+```
+
+### Rebuild a single service after code changes
+
+```bash
+docker compose up --build backend
+```
+
+### Open a shell inside a running container
+
+```bash
+docker compose exec backend sh
+docker compose exec db psql -U postgres -d trellodb
+```
+
+---
+
+## Stopping & Cleanup
+
+| Command                         | Effect                                               |
+| ------------------------------- | ---------------------------------------------------- |
+| `docker compose stop`           | Stop containers, preserve data volume                |
+| `docker compose down`           | Stop and remove containers, preserve data volume     |
+| `docker compose down -v`        | Stop, remove containers **and** the data volume      |
+| `docker compose down --rmi all` | Also remove built images (full clean)                |
+
+### Full reset (start from zero)
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+---
+
+## API Health Check
+
+The backend exposes a health endpoint used by Docker's internal healthcheck:
+
+```
+GET http://localhost:5000/api/health
+→ 200 { "status": "ok" }
+```
+
+---
+
+## License
+
+MIT

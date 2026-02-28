@@ -8,6 +8,11 @@ const checklistsRouter = require('./checklists');
 
 const router = Router();
 
+// GET /api/health — used by Docker healthcheck
+router.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Auth routes: /api/auth/*
 router.use('/auth', authRouter);
 
