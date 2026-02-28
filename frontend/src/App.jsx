@@ -3,10 +3,7 @@ import { useAuth } from './store/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
-
-function BoardPage() {
-  return <div style={{ padding: 32 }}>Board detail — coming soon.</div>;
-}
+import BoardPage from './pages/BoardPage';
 
 // ── ProtectedRoute ─────────────────────────────────────────────────────────────
 /**
@@ -33,7 +30,7 @@ function RootRedirect() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) return null;
-  return <Navigate to={user ? '/boards' : '/login'} replace />;
+  return <Navigate to={user ? '/dashboard' : '/login'} replace />;
 }
 
 // ── App ────────────────────────────────────────────────────────────────────────
@@ -50,7 +47,7 @@ export default function App() {
 
         {/* Protected routes */}
         <Route
-          path="/boards"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardPage />
@@ -58,7 +55,7 @@ export default function App() {
           }
         />
         <Route
-          path="/boards/:id"
+          path="/boards/:boardId"
           element={
             <ProtectedRoute>
               <BoardPage />

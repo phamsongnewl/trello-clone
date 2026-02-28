@@ -33,7 +33,7 @@ export default function LoginPage() {
     setIsPending(true);
     try {
       await login({ email, password });
-      navigate('/boards');
+      navigate('/dashboard');
     } catch (err) {
       const message =
         err.response?.data?.message ?? 'Login failed. Please try again.';
