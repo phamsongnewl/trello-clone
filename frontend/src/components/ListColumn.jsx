@@ -188,6 +188,7 @@ const ListColumn = ({ list, boardId, onDelete, onCardClick }) => {
                 key={card.id}
                 card={card}
                 index={index}
+                boardId={boardId}
                 onClick={() => onCardClick?.(card)}
               />
             ))}
