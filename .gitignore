@@ -2,3 +2,4 @@
 .vscode/
 plans/
 node_modules/
+frontend/dist/
