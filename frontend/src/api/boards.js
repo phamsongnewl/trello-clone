@@ -7,6 +7,13 @@ import api from './axios';
 export const getBoards = () => api.get('/boards').then((r) => r.data);
 
 /**
+ * Get a single board by ID (includes lists and cards).
+ * @param {string|number} id
+ * @returns {Promise<Object>}
+ */
+export const getBoardById = (id) => api.get(`/boards/${id}`).then((r) => r.data);
+
+/**
  * Create a new board.
  * @param {{ title: string, background_color: string }} data
  * @returns {Promise<Object>}
