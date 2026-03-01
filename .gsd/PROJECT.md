@@ -26,15 +26,16 @@ Users can organise and move tasks across a Kanban board visually.
 - ✓ User can assign colour labels to cards — v1.0
 - ✓ User can set a due date on a card — v1.0
 - ✓ App runs via `docker compose up --build` — v1.0
+- ✓ User can drag a list column left/right to reorder it on the board (optimistic update) — v1.1
+- ✓ Reordered list position persists after page refresh (saved to server) — v1.1
+- ✓ Board UI reflects new list order immediately; rolls back on server error — v1.1
+- ✓ `reorderLists()` body key corrected to `lists` matching backend contract — v1.1
 
 ### Active
 
-<!-- Current milestone scope — v1.1 List drag-and-drop -->
+<!-- Next milestone requirements — defined via /new-milestone.md -->
 
-- [ ] **LIST-01** User can drag a list column left/right to reorder it on the board
-- [ ] **LIST-02** The reordered position persists after page refresh (saved to server)
-- [ ] **LIST-03** Board UI reflects the new list order immediately (optimistic update, rolls back on error)
-- [ ] **FIX-01** Frontend `reorderLists()` body key matches backend expectation (`lists` not `items`)
+(None — start next milestone with `/new-milestone.md`)
 
 ### Out of Scope
 
@@ -73,4 +74,4 @@ Users can organise and move tasks across a Kanban board visually.
 
 ---
 
-_Last updated: 2026-03-01 — Milestone v1.1 started_
+_Last updated: 2026-03-01 — v1.1 milestone complete (list drag-and-drop shipped)_

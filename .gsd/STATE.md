@@ -5,16 +5,16 @@
 See: .gsd/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Users can organise and move tasks across a Kanban board visually.
-**Current focus:** v1.1 — List drag-and-drop
+**Current focus:** Planning next milestone — run `/new-milestone.md` to begin
 
 ## Current Position
 
-Phase: Phase 1 of 1 — COMPLETE ✅
-Plan: 3/3 complete
-Status: Phase complete — all plans executed, verified
-Last activity: 2026-03-01 — Phase 1 complete (list drag-and-drop verified 13/13)
+Phase: v1.1 complete — awaiting next milestone definition
+Plan: Not started
+Status: Ready to plan next milestone
+Last activity: 2026-03-01 — v1.1 milestone complete (archived, tagged)
 
-Progress: [██████████] 100%
+Progress: [██████████] v1.1 shipped
 
 ## Performance Metrics
 
