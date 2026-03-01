@@ -149,6 +149,42 @@ GET http://localhost:5000/api/health
 
 ---
 
+## Production Deployment
+
+The Trello service is deployed as part of the main `docker-compose.prod.yml` stack and served at `https://trello.hireaptitude.co.uk`.
+
+### Required Environment Variables
+
+Add these variables to `main_project/.env.prod` before running the production stack:
+
+| Variable | Example value | Description |
+|---|---|---|
+| `TRELLO_DB_NAME` | `trello_db` | Name of the Trello PostgreSQL database (must be created first — see below) |
+| `TRELLO_JWT_SECRET` | *(strong random string)* | Secret key used to sign JWT authentication tokens |
+
+The following variables are **already defined** in `.env.prod` and are reused by the `trello-backend` service:
+
+| Variable | Notes |
+|---|---|
+| `POSTGRES_USERNAME` | Mapped to `DB_USER` inside the container |
+| `POSTGRES_PASSWORD` | Mapped to `DB_PASSWORD` inside the container |
+
+The backend resolves the variables as follows (see `src/config/database.js` and `src/index.js`):
+
+| Container env var | Source in `.env.prod` |
+|---|---|
+| `DB_HOST` | hardcoded as `postgres` (Docker service name) |
+| `DB_PORT` | hardcoded as `5432` |
+| `DB_NAME` | `${TRELLO_DB_NAME}` |
+| `DB_USER` | `${POSTGRES_USERNAME}` |
+| `DB_PASSWORD` | `${POSTGRES_PASSWORD}` |
+| `JWT_SECRET` | `${TRELLO_JWT_SECRET}` |
+| `CORS_ORIGIN` | hardcoded as `https://trello.hireaptitude.co.uk` |
+| `NODE_ENV` | hardcoded as `production` |
+| `PORT` | hardcoded as `5000` |
+
+---
+
 ## License
 
 MIT

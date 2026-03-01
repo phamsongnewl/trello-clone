@@ -1,7 +1,4 @@
-.github/
-.vscode/
 docs/plans/
 node_modules/
 frontend/dist/
 .env
-.gsd/templates

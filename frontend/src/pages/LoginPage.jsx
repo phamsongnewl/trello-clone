@@ -16,14 +16,16 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email,     setEmail]     = useState('');
+  const [password,  setPassword]  = useState('');
   const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState('');
+  const [error,     setError]     = useState('');
+  const [errorType, setErrorType] = useState('error'); // 'error' | 'warning'
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setErrorType('error');
 
     if (!email.trim() || !password.trim()) {
       setError('Email and password are required.');
@@ -35,9 +37,18 @@ export default function LoginPage() {
       await login({ email, password });
       navigate('/dashboard');
     } catch (err) {
-      const message =
-        err.response?.data?.message ?? 'Login failed. Please try again.';
-      setError(message);
+      if (err.response?.status === 403) {
+        setErrorType('warning');
+        setError(
+          err.response.data?.message ??
+          'Your account is not activated yet. Please contact admin.'
+        );
+      } else {
+        setErrorType('error');
+        setError(
+          err.response?.data?.message ?? 'Login failed. Please try again.'
+        );
+      }
     } finally {
       setIsPending(false);
     }
@@ -55,19 +66,16 @@ export default function LoginPage() {
     >
       <Container maxWidth="xs">
         <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-          {/* Heading */}
           <Typography variant="h5" fontWeight={700} align="center" mb={3}>
             Log in to Trello App
           </Typography>
 
-          {/* Error alert */}
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity={errorType} sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
 
-          {/* Form */}
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <TextField
               label="Email"
@@ -101,7 +109,6 @@ export default function LoginPage() {
             </Button>
           </Box>
 
-          {/* Register link */}
           <Typography align="center" variant="body2" mt={2}>
             Don&apos;t have an account?{' '}
             <Link component={RouterLink} to="/register" underline="hover">

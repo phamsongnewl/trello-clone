@@ -92,6 +92,10 @@ async function login(req, res, next) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    if (!user.is_active) {
+      return res.status(403).json({ message: 'Your account is not activated yet. Please contact admin.' });
+    }
+
     const token = signToken(user.id);
     setCookieToken(res, token);
 
