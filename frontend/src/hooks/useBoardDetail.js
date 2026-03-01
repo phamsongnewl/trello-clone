@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getBoardById } from '../api/boards';
-import { createList, deleteList } from '../api/lists';
+import { createList, deleteList, reorderLists } from '../api/lists';
 import { createCard, moveCard } from '../api/cards';
 
 // ─── Query Key Factory ───────────────────────────────────────────────────────
@@ -144,6 +144,54 @@ export const useMoveCard = (boardId) => {
 
     onSettled: () => {
       // Always refetch to sync with server
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+};
+
+// ─── useMoveList ─────────────────────────────────────────────────────────────
+
+/**
+ * Mutation: reorder list columns on the board.
+ *
+ * Accepts: { boardId, lists } where lists is the COMPLETE ordered array
+ * of list objects with rebalanced positions already applied:
+ *   lists = sortedLists.map((l, i) => ({ ...l, position: (i + 1) * 1000 }))
+ *
+ * Uses optimistic update:
+ * 1. Snapshot current board data.
+ * 2. Immediately update cached board.lists order + positions.
+ * 3. On error, roll back to the snapshot.
+ * 4. On settled, invalidate to sync with server.
+ */
+export const useMoveList = (boardId) => {
+  const queryClient = useQueryClient();
+  const queryKey = boardKeys.detail(boardId);
+
+  return useMutation({
+    mutationFn: ({ lists }) =>
+      reorderLists(lists.map((l) => ({ id: l.id, position: l.position }))),
+
+    onMutate: async ({ lists }) => {
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousBoard = queryClient.getQueryData(queryKey);
+
+      queryClient.setQueryData(queryKey, (old) => {
+        if (!old) return old;
+        return { ...old, lists };
+      });
+
+      return { previousBoard };
+    },
+
+    onError: (_err, _vars, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(queryKey, context.previousBoard);
+      }
+    },
+
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
     },
   });
