@@ -12,19 +12,24 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
+  TextField,
   Typography,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 /**
  * @param {{
  *   board: { id: number|string, title: string, background_color: string },
- *   onDelete: (id: number|string) => void
+ *   onDelete: (id: number|string) => void,
+ *   onRename: (id: number|string, newTitle: string) => void
  * }} props
  */
-export default function BoardCard({ board, onDelete }) {
+export default function BoardCard({ board, onDelete, onRename }) {
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
 
   const handleDeleteClick = (e) => {
     e.stopPropagation();
@@ -34,6 +39,20 @@ export default function BoardCard({ board, onDelete }) {
   const handleConfirmDelete = () => {
     setConfirmOpen(false);
     onDelete(board.id);
+  };
+
+  const handleRenameClick = (e) => {
+    e.stopPropagation();
+    setRenameValue(board.title);
+    setRenameOpen(true);
+  };
+
+  const handleConfirmRename = () => {
+    const trimmed = renameValue.trim();
+    if (trimmed && trimmed !== board.title) {
+      onRename(board.id, trimmed);
+    }
+    setRenameOpen(false);
   };
 
   return (
@@ -77,7 +96,7 @@ export default function BoardCard({ board, onDelete }) {
           </CardContent>
         </CardActionArea>
 
-        {/* Delete button — visible on hover */}
+        {/* Action buttons — visible on hover */}
         <Box
           className="delete-btn"
           sx={{
@@ -86,8 +105,22 @@ export default function BoardCard({ board, onDelete }) {
             right: 4,
             opacity: 0,
             transition: 'opacity 0.15s ease',
+            display: 'flex',
+            gap: 0.5,
           }}
         >
+          <IconButton
+            size="small"
+            onClick={handleRenameClick}
+            aria-label={`Rename board ${board.title}`}
+            sx={{
+              bgcolor: 'rgba(0,0,0,0.35)',
+              color: '#fff',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' },
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
           <IconButton
             size="small"
             onClick={handleDeleteClick}
@@ -103,7 +136,41 @@ export default function BoardCard({ board, onDelete }) {
         </Box>
       </Card>
 
-      {/* Confirmation dialog */}
+      {/* Rename dialog */}
+      <Dialog
+        open={renameOpen}
+        onClose={() => setRenameOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Rename board</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Board name"
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleConfirmRename();
+              if (e.key === 'Escape') setRenameOpen(false);
+            }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRenameOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleConfirmRename}
+            disabled={!renameValue.trim()}
+          >
+            Rename
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
       <Dialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
