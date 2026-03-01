@@ -51,6 +51,10 @@ services:
     build: ./frontend
     ports:
       - "3000:80"
+    environment:
+      # Must match the backend service name defined above (or your prod hostname)
+      BACKEND_HOST: backend
+      BACKEND_PORT: 5000
     depends_on:
       backend:
         condition: service_healthy
