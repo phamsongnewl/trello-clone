@@ -1,4 +1,4 @@
-docs/plans/
+plans/
 node_modules/
 frontend/dist/
 .env
