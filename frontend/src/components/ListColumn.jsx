@@ -30,7 +30,7 @@ import AddCardForm from './AddCardForm';
  *   • provided.placeholder is MANDATORY — without it collapsed columns break DnD.
  *   • minHeight on the cards container ensures empty lists are still droppable.
  */
-const ListColumn = ({ list, boardId, onDelete, onCardClick }) => {
+const ListColumn = ({ list, boardId, onDelete, onCardClick, dragHandleProps, isDragging }) => {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(list.title);
   const titleInputRef = useRef(null);
@@ -98,10 +98,12 @@ const ListColumn = ({ list, boardId, onDelete, onCardClick }) => {
         display: 'flex',
         flexDirection: 'column',
         maxHeight: 'calc(100vh - 140px)',
+        opacity: isDragging ? 0.8 : 1,
       }}
     >
       {/* ── Column Header ─────────────────────────────────── */}
       <Box
+        {...dragHandleProps}
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -109,6 +111,7 @@ const ListColumn = ({ list, boardId, onDelete, onCardClick }) => {
           pt: 1.5,
           pb: 0.5,
           gap: 0.5,
+          cursor: dragHandleProps ? 'grab' : 'default',
         }}
       >
         {editingTitle ? (
