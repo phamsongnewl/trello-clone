@@ -11,7 +11,7 @@ import AddIcon from '@mui/icons-material/Add';
 import Navbar from '../components/Navbar';
 import BoardCard from '../components/BoardCard';
 import CreateBoardModal from '../components/CreateBoardModal';
-import { useBoards } from '../hooks/useBoards';
+import { useBoards, useDeleteBoard } from '../hooks/useBoards';
 
 /** Toolbar offset so content is not hidden under the fixed AppBar */
 const TOOLBAR_HEIGHT = 64;
@@ -22,6 +22,7 @@ const SKELETON_COUNT = 8;
 export default function DashboardPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const { data: boards, isPending, isError, error } = useBoards();
+  const deleteBoard = useDeleteBoard();
 
   return (
     <>
@@ -68,7 +69,10 @@ export default function DashboardPage() {
             {!isPending &&
               boards?.map((board) => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={board.id}>
-                  <BoardCard board={board} />
+                  <BoardCard
+                    board={board}
+                    onDelete={(id) => deleteBoard.mutate(id)}
+                  />
                 </Grid>
               ))}
 
