@@ -21,6 +21,11 @@ class Board extends Model {
           type: DataTypes.UUID,
           allowNull: false,
         },
+        position: {
+          type: DataTypes.FLOAT,
+          allowNull: true,
+          defaultValue: null,
+        },
       },
       {
         sequelize,
