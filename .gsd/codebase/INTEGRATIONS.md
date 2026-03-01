@@ -4,106 +4,96 @@
 
 ## APIs & External Services
 
-No third-party external APIs are integrated. All features are self-contained within the application stack. No SDKs for Stripe, SendGrid, AWS, Twilio, or similar services are present in either `backend/package.json` or `frontend/package.json`.
+**None detected.** The application is entirely self-hosted. No third-party SaaS APIs (payment, email, SMS, analytics, etc.) are integrated. All functionality is served by the custom REST API in `backend/src/`.
 
 ## Data Storage
 
 **Databases:**
 
 - PostgreSQL 16 (Alpine)
-  - Connection: managed via Sequelize in `backend/src/config/database.js`
-  - Env vars: `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST` (default: `localhost`), `DB_PORT` (default: `5432`)
-  - Client/ORM: Sequelize 6 with `pg` + `pg-hstore` drivers
-  - Connection pool: max 10, min 0, acquire timeout 30s, idle timeout 10s
-  - Sync mode: `{ alter: false, force: false }` — no auto-migration on startup
-  - In Docker: provided by the `db` service (`docker-compose.yml`), with health check before backend starts
-
-**Models registered in `backend/src/models/index.js`:**
-- `User` — `backend/src/models/User.js`
-- `Board` — `backend/src/models/Board.js`
-- `List` — `backend/src/models/List.js`
-- `Card` — `backend/src/models/Card.js`
-- `Label` — `backend/src/models/Label.js`
-- `CardLabel` — `backend/src/models/CardLabel.js` (join table)
-- `Checklist` — `backend/src/models/Checklist.js`
-- `ChecklistItem` — `backend/src/models/ChecklistItem.js`
+  - Used for all persistent application data
+  - Schema managed by Sequelize ORM with `sequelize.sync()` (alter/force both `false` — additive sync only)
+  - Connection: environment variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+  - Client: `pg` 8.19 + `pg-hstore` 2.3 (native PostgreSQL driver used by Sequelize)
+  - ORM config: `backend/src/config/database.js`
+  - Connection pool: max 10 connections, acquire timeout 30 s, idle timeout 10 s
+  - Models: `User`, `Board`, `List`, `Card`, `Label`, `CardLabel`, `Checklist`, `ChecklistItem` — all in `backend/src/models/`
+  - Associations registered in `backend/src/models/index.js`
 
 **File Storage:**
 
-- Local filesystem only — no object storage (S3, GCS, etc.) detected
+- Not applicable — no file or image uploads are implemented.
 
 **Caching:**
 
-- None — no Redis, Memcached, or in-memory cache layer detected
+- None — no Redis or in-memory caching layer exists. TanStack React Query provides client-side cache in the browser only (`frontend/src/` hooks).
 
 ## Authentication & Identity
 
 **Auth Provider:**
 
-- Custom (self-hosted) — no OAuth providers (Google, GitHub, etc.) or identity services (Auth0, Clerk, Supabase) are used
-
-**Implementation:**
-
-- Registration/login handled in `backend/src/controllers/authController.js`
-- Passwords hashed with `bcryptjs` (salt rounds: 10)
-- Sessions implemented via signed JWT stored in an httpOnly cookie named `token`
-  - Token signed with `JWT_SECRET` env var, expiry: 7 days
-  - Cookie flags: `httpOnly: true`, `sameSite: 'lax'`, `secure: true` in production
-- JWT validation middleware in `backend/src/middleware/auth.js` — verifies token from cookie, attaches `req.user`
-- Frontend axios instance (`frontend/src/api/axios.js`) sends cookies on every request via `withCredentials: true`
-- 401 responses trigger automatic redirect to `/login` via axios response interceptor
+- Custom (self-hosted) — no third-party identity provider (Auth0, Firebase, Cognito, etc.)
+  - Implementation: Username/password login; passwords hashed with `bcryptjs` in `backend/src/controllers/authController.js`
+  - Session token: JWT signed with `JWT_SECRET` env var using `jsonwebtoken`; delivered and stored as an httpOnly cookie named `token`
+  - Token verification: `backend/src/middleware/auth.js` reads the cookie, calls `jwt.verify()`, and attaches the `User` model instance to `req.user`
+  - Frontend session: `AuthContext` (`frontend/src/store/AuthContext.jsx`) bootstraps session by calling `GET /api/auth/me` on mount; exposes `login()` and `logout()` hooks
+  - Axios client (`frontend/src/api/axios.js`) sends `withCredentials: true` on every request so the cookie is included automatically
+  - 401 responses trigger a redirect to `/login` via an Axios response interceptor
 
 ## Monitoring & Observability
 
 **Error Tracking:**
 
-- None — no Sentry, Datadog, or equivalent SDK detected
+- None — no Sentry, Datadog, or similar service is integrated.
 
 **Logs:**
 
-- `console.log` / `console.error` only
-- Sequelize SQL logging enabled in `development` mode (`NODE_ENV === 'development'`), disabled otherwise (`backend/src/config/database.js`)
-- Health check endpoint: `GET /api/health` returns `{ status: 'ok' }` (used by Docker healthcheck)
+- Backend: `console.error` in `backend/src/middleware/errorHandler.js` and `console.log` for DB connection status in `backend/src/index.js`
+- Sequelize query logging: enabled only when `NODE_ENV=development` (see `backend/src/config/database.js`)
+- No structured logging library (e.g., Winston, Pino) is in use.
 
 ## CI/CD & Deployment
 
 **Hosting:**
 
-- Docker Compose (`docker-compose.yml`) — three services: `db`, `backend`, `frontend`
-- No cloud-specific deployment config detected (no Heroku Procfile, Render/Railway config, or Kubernetes manifests)
+- Self-hosted Docker Compose stack; no cloud provider is configured.
+- Services defined in `docker-compose.yml`: `db`, `backend`, `frontend`
+- Health checks: `pg_isready` for db; `wget /api/health` for backend; `frontend` depends on backend being healthy
 
 **CI Pipeline:**
 
-- None detected — no `.github/workflows/` CI files, no CircleCI, no GitLab CI config
+- None — no GitHub Actions, GitLab CI, or other pipeline configuration files are present.
 
 ## Environment Configuration
 
 **Required env vars (backend):**
 
-- `DB_NAME` — PostgreSQL database name
-- `DB_USER` — PostgreSQL username
-- `DB_PASSWORD` — PostgreSQL password
-- `DB_HOST` — Database host
-- `DB_PORT` — Database port
-- `JWT_SECRET` — JWT signing secret (keep secret)
-- `PORT` — Backend server port (optional, defaults to `5000`)
-- `CORS_ORIGIN` — Allowed frontend origin (optional, defaults to `http://localhost:3000`)
-- `NODE_ENV` — `development` | `production`
+```
+DB_HOST        # PostgreSQL hostname (default: db — the Docker Compose service name)
+DB_PORT        # PostgreSQL port (default: 5432)
+DB_NAME        # Database name (default: trellodb)
+DB_USER        # PostgreSQL user (default: postgres)
+DB_PASSWORD    # PostgreSQL password
+PORT           # Backend HTTP port (default: 5000)
+NODE_ENV       # Application environment (development | production)
+JWT_SECRET     # HMAC secret for JWT signing — CHANGE IN PRODUCTION
+CORS_ORIGIN    # Allowed CORS origin (default: http://localhost:3000)
+```
 
 **Secrets location:**
 
-- `backend/.env` — loaded via `dotenv` (`backend/src/index.js`), referenced in `docker-compose.yml` via `env_file: ./backend/.env`
-- No `.env.example` file detected
+- `backend/.env` — loaded at runtime via `env_file` directive in `docker-compose.yml`
+- `backend/.env.example` — safe template committed to the repo with placeholder values
 
 ## Webhooks & Callbacks
 
 **Incoming:**
 
-- None — no webhook receiver endpoints detected
+- None — no webhook endpoints are defined.
 
 **Outgoing:**
 
-- None — no outgoing HTTP calls to external services detected
+- None — the backend makes no outbound HTTP calls to external services.
 
 ---
 

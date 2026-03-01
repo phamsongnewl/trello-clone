@@ -6,232 +6,243 @@
 
 ```
 trello-clone/                     # Monorepo root
-├── docker-compose.yml            # Orchestrates backend, frontend, postgres services
+├── docker-compose.yml            # Orchestrates db + backend + frontend containers
 ├── README.md
-├── backend/                      # Node.js/Express REST API service
+├── backend/                      # Node.js / Express REST API
 │   ├── Dockerfile
 │   ├── package.json
 │   └── src/
-│       ├── index.js              # App entry point (Express setup + DB connect)
+│       ├── index.js              # Server entry point
 │       ├── config/
-│       │   └── database.js       # Sequelize instance (PostgreSQL)
-│       ├── middleware/
-│       │   ├── auth.js           # JWT cookie verification; attaches req.user
-│       │   └── errorHandler.js   # Global Express error handler
-│       ├── models/
-│       │   ├── index.js          # Initialises all models + wires associations
-│       │   ├── User.js
-│       │   ├── Board.js
-│       │   ├── List.js
-│       │   ├── Card.js
-│       │   ├── Label.js
-│       │   ├── CardLabel.js      # Many-to-many join table (Card ↔ Label)
-│       │   ├── Checklist.js
-│       │   └── ChecklistItem.js
-│       ├── controllers/
+│       │   └── database.js       # Sequelize connection setup
+│       ├── controllers/          # Route handler functions (one file per resource)
 │       │   ├── authController.js
 │       │   ├── boardController.js
-│       │   ├── listController.js
 │       │   ├── cardController.js
+│       │   ├── checklistController.js
 │       │   ├── labelController.js
-│       │   └── checklistController.js
-│       └── routes/
-│           ├── index.js          # Aggregates all resource routers under /api
+│       │   └── listController.js
+│       ├── middleware/           # Express middleware
+│       │   ├── auth.js           # JWT cookie guard → attaches req.user
+│       │   └── errorHandler.js   # Global error-to-HTTP-status mapper
+│       ├── models/               # Sequelize ORM models (one file per table)
+│       │   ├── index.js          # Init + associate all models
+│       │   ├── Board.js
+│       │   ├── Card.js
+│       │   ├── CardLabel.js      # Join table for Card ↔ Label M:N
+│       │   ├── Checklist.js
+│       │   ├── ChecklistItem.js
+│       │   ├── Label.js
+│       │   ├── List.js
+│       │   └── User.js
+│       └── routes/               # Express Router definitions (one file per resource)
+│           ├── index.js          # Root router — mounts all sub-routers under /api
 │           ├── auth.js
 │           ├── boards.js
-│           ├── lists.js
 │           ├── cards.js
+│           ├── checklists.js
 │           ├── labels.js
-│           └── checklists.js
-└── frontend/                     # React SPA (Vite build, served by Nginx)
+│           └── lists.js
+└── frontend/                     # React SPA (Vite build, served by nginx)
     ├── Dockerfile
-    ├── nginx.conf
     ├── index.html
+    ├── nginx.conf
     ├── package.json
     ├── vite.config.js
     └── src/
-        ├── main.jsx              # React root: providers + app mount
-        ├── App.jsx               # Router + ProtectedRoute + RootRedirect
-        ├── theme.js              # MUI theme configuration
-        ├── api/
-        │   ├── axios.js          # Configured Axios instance; 401 interceptor
+        ├── App.jsx               # Route declarations + ProtectedRoute guard
+        ├── main.jsx              # React root — wraps App with providers
+        ├── theme.js              # MUI theme customization
+        ├── api/                  # Thin Axios wrappers for each resource
+        │   ├── axios.js          # Shared Axios instance + 401 interceptor
         │   ├── auth.js
         │   ├── boards.js
-        │   ├── lists.js
         │   ├── cards.js
+        │   ├── checklists.js
         │   ├── labels.js
-        │   └── checklists.js
-        ├── store/
-        │   └── AuthContext.jsx   # Auth React Context + useAuth hook
-        ├── hooks/
-        │   ├── useBoardDetail.js # Board + list + card queries and mutations
-        │   ├── useBoards.js      # Dashboard board list queries and mutations
-        │   └── useCardDetail.js  # Card detail query and mutations
-        ├── pages/
-        │   ├── LoginPage.jsx
-        │   ├── RegisterPage.jsx
-        │   ├── DashboardPage.jsx
-        │   └── BoardPage.jsx
-        └── components/
-            ├── Navbar.jsx
-            ├── BoardCard.jsx
-            ├── ListColumn.jsx
-            ├── CardItem.jsx
-            ├── CardModal.jsx
-            ├── AddListForm.jsx
-            ├── AddCardForm.jsx
-            ├── ChecklistSection.jsx
-            ├── LabelPicker.jsx
-            ├── DueDatePicker.jsx
-            └── CreateBoardModal.jsx
+        │   └── lists.js
+        ├── components/           # Reusable UI components
+        │   ├── AddCardForm.jsx
+        │   ├── AddListForm.jsx
+        │   ├── BoardCard.jsx
+        │   ├── CardItem.jsx
+        │   ├── CardModal.jsx
+        │   ├── ChecklistSection.jsx
+        │   ├── CreateBoardModal.jsx
+        │   ├── DueDatePicker.jsx
+        │   ├── LabelPicker.jsx
+        │   ├── ListColumn.jsx
+        │   └── Navbar.jsx
+        ├── hooks/                # React Query data-fetching hooks
+        │   ├── useBoardDetail.js # Board + lists + cards + mutations
+        │   ├── useBoards.js      # Boards list + CRUD mutations
+        │   └── useCardDetail.js  # Card detail + checklist mutations
+        ├── pages/                # Route-level page components
+        │   ├── BoardPage.jsx     # /boards/:boardId — full kanban board
+        │   ├── DashboardPage.jsx # /dashboard — boards grid
+        │   ├── LoginPage.jsx     # /login
+        │   └── RegisterPage.jsx  # /register
+        └── store/
+            └── AuthContext.jsx   # Auth React Context + useAuth() hook
 ```
 
 ## Directory Purposes
 
 **`backend/src/config/`:**
 
-- Purpose: Singleton infrastructure clients
-- Contains: Sequelize connection instance
-- Key files: `backend/src/config/database.js`
-
-**`backend/src/middleware/`:**
-
-- Purpose: Express middleware that runs before or after every (or specific) route handlers
-- Contains: Auth guard (`auth.js`), global error mapper (`errorHandler.js`)
-- New middleware files belong here
+- Purpose: Infrastructure-level singletons
+- Contains: Database connection (`database.js`)
+- Key files: `backend/src/config/database.js` — exports a single Sequelize instance configured from env vars
 
 **`backend/src/models/`:**
 
-- Purpose: Sequelize ORM model classes; one file per database table
-- Contains: Schema definition (`Model.init`) + association declaration (`Model.associate`)
-- Key files: `backend/src/models/index.js` (must be required before `sequelize.sync`)
+- Purpose: ORM model definitions and inter-model associations
+- Contains: One class per database table; association logic co-located with each model via `associate(models)` static
+- Key files: `backend/src/models/index.js` — calls `Model.init(sequelize)` and `Model.associate(models)` for every model; must be imported before `sequelize.sync()`
 
 **`backend/src/controllers/`:**
 
-- Purpose: Business logic and HTTP request/response handlers
-- Contains: Async functions exported by name, imported in router files
-- Naming: `<resource>Controller.js`
+- Purpose: Business logic for each REST resource
+- Contains: Named async handler functions; each function typically validates → queries Sequelize → returns JSON
+- Key files: `backend/src/controllers/authController.js` (bcrypt + JWT), `backend/src/controllers/boardController.js`
 
 **`backend/src/routes/`:**
 
-- Purpose: Express Router instances mapping HTTP verbs + paths to controller functions
-- Key files: `backend/src/routes/index.js` aggregates all sub-routers under `/api`
+- Purpose: Express Router wiring — maps HTTP verbs + paths to `auth` middleware + controller functions
+- Contains: One router file per resource; `index.js` mounts them all under `/api`
+- Note: List, card, label, checklist routers are mounted at root (`/`) to enable nested URL patterns such as `/api/boards/:boardId/lists` and `/api/lists/:id`
+
+**`backend/src/middleware/`:**
+
+- Purpose: Express middleware shared across routes
+- `auth.js` — authentication guard; attach before any protected route handler
+- `errorHandler.js` — last middleware registered; converts thrown/forwarded errors to HTTP responses
 
 **`frontend/src/api/`:**
 
-- Purpose: Thin HTTP client functions — one module per REST resource
-- Contains: Named exports wrapping the shared Axios instance; all unwrap `.data`
-- Key files: `frontend/src/api/axios.js` (single Axios instance, must be imported by all other modules here)
-
-**`frontend/src/store/`:**
-
-- Purpose: Global client-side state that is not server-derived
-- Contains: `AuthContext.jsx` providing `user`, `isLoading`, `login`, `logout`
-- Add new contexts here if needed; keep server state in React Query hooks instead
+- Purpose: HTTP client layer; isolates Axios calls from UI code
+- Pattern: Each file exports named functions that call the shared `api` instance and return `r.data`
+- `axios.js` — single configured Axios instance; all other api files import from here
 
 **`frontend/src/hooks/`:**
 
-- Purpose: React Query query/mutation hooks binding API calls to cache keys
-- Contains: One file per primary resource or page; each file exports a query-key factory and one hook per operation
-- Naming: `use<Resource>.js` or `use<Resource>Detail.js`
-
-**`frontend/src/pages/`:**
-
-- Purpose: Route-level components; map 1-to-1 with routes declared in `frontend/src/App.jsx`
-- Naming: `<Name>Page.jsx`
+- Purpose: Data-fetching abstraction; components never call `api/` directly
+- Pattern: Wraps React Query `useQuery`/`useMutation` with domain-specific query keys and cache invalidation
+- All board-related mutations (create list, move card) live in `useBoardDetail.js` to co-locate with the board query key
 
 **`frontend/src/components/`:**
 
-- Purpose: Reusable presentational and composite UI components
-- Naming: `PascalCase.jsx`
+- Purpose: Reusable, composable UI pieces; do not fetch data themselves — receive it via props or call hooks from `frontend/src/hooks/`
+- Key files: `CardModal.jsx` (full card detail overlay), `ListColumn.jsx` (single Kanban column with drag-drop), `BoardCard.jsx` (board preview card on dashboard)
+
+**`frontend/src/pages/`:**
+
+- Purpose: Route-level container components; each maps 1:1 to a React Router `<Route>`
+- Responsible for calling hooks, handling loading/error states, and composing component trees
+
+**`frontend/src/store/`:**
+
+- Purpose: Client-only global state (currently only auth)
+- `AuthContext.jsx` exports `AuthProvider` (wraps `main.jsx`) and `useAuth()` hook
 
 ## Key File Locations
 
 **Entry Points:**
 
-- `backend/src/index.js`: Express app factory, DB connection, server start
-- `frontend/src/main.jsx`: React DOM root, global providers
-- `frontend/src/App.jsx`: React Router routes
+- `backend/src/index.js`: Express app bootstrap, DB connect, server listen
+- `frontend/src/main.jsx`: React root render with `<AuthProvider>` and `<QueryClientProvider>`
+- `frontend/src/App.jsx`: Client-side route declarations, `ProtectedRoute` wrapper
 
 **Configuration:**
 
-- `backend/src/config/database.js`: PostgreSQL / Sequelize config (reads env vars)
-- `frontend/src/theme.js`: MUI theme tokens
-- `frontend/vite.config.js`: Vite + dev proxy config
-- `docker-compose.yml`: Service orchestration (ports, volumes, env vars)
+- `backend/src/config/database.js`: Sequelize instance (reads `DB_*` env vars)
+- `frontend/vite.config.js`: Vite build config, dev server proxy
+- `docker-compose.yml`: Service definitions for `db`, `backend`, `frontend`
+- `frontend/nginx.conf`: Static file serving + reverse proxy to backend in production
 
 **Core Logic:**
 
-- `backend/src/models/index.js`: All model registration and associations
-- `backend/src/routes/index.js`: All API route aggregation
-- `backend/src/middleware/auth.js`: Authentication gate for protected routes
-- `frontend/src/api/axios.js`: Shared HTTP client with 401 redirect interceptor
-- `frontend/src/store/AuthContext.jsx`: Auth state and session rehydration
+- `backend/src/models/index.js`: Model initialization registry — edit when adding a new model
+- `backend/src/routes/index.js`: API route mount registry — edit when adding a new resource router
+- `frontend/src/api/axios.js`: Shared HTTP client — set default headers/interceptors here
 
-**Testing:**
+**Data Fetching:**
 
-- No test directory detected in the current codebase
+- `frontend/src/hooks/useBoardDetail.js`: All board page data and card/list mutations
+- `frontend/src/hooks/useBoards.js`: Dashboard board list and CRUD
+- `frontend/src/hooks/useCardDetail.js`: Card modal data and checklist mutations
 
 ## Naming Conventions
 
-**Files (Backend):**
+**Backend Files:**
 
-- Controllers: `camelCase` with `Controller` suffix — e.g., `boardController.js`
-- Models: `PascalCase` matching the Sequelize model name — e.g., `Board.js`, `CardLabel.js`
-- Routes: `camelCase` resource name — e.g., `boards.js`, `checklists.js`
-- Middleware: `camelCase` descriptor — e.g., `auth.js`, `errorHandler.js`
+- Controllers: `{resource}Controller.js` (camelCase resource, e.g., `cardController.js`)
+- Models: PascalCase singular noun matching the class name (e.g., `Card.js`, `ChecklistItem.js`)
+- Routes: lowercase plural noun (e.g., `boards.js`, `checklists.js`)
+- Middleware: camelCase descriptive (e.g., `auth.js`, `errorHandler.js`)
 
-**Files (Frontend):**
+**Frontend Files:**
 
-- Pages: `PascalCase` with `Page` suffix — e.g., `BoardPage.jsx`, `DashboardPage.jsx`
-- Components: `PascalCase` — e.g., `ListColumn.jsx`, `CardModal.jsx`
-- Hooks: `camelCase` with `use` prefix — e.g., `useBoardDetail.js`, `useCardDetail.js`
-- API modules: `camelCase` resource name — e.g., `boards.js`, `checklists.js`
+- Pages: PascalCase with `Page` suffix (e.g., `BoardPage.jsx`, `DashboardPage.jsx`)
+- Components: PascalCase noun (e.g., `CardModal.jsx`, `ListColumn.jsx`)
+- Hooks: camelCase `use` prefix (e.g., `useBoardDetail.js`, `useBoards.js`)
+- API modules: lowercase singular noun matching backend resource (e.g., `boards.js`, `cards.js`)
+- Context: PascalCase with `Context` suffix (e.g., `AuthContext.jsx`)
 
-**Directories:**
+**Identifiers:**
 
-- `backend/src/` subdirs: `camelCase` plural noun — `controllers/`, `models/`, `routes/`, `middleware/`
-- `frontend/src/` subdirs: `camelCase` plural noun — `pages/`, `components/`, `hooks/`, `api/`, `store/`
+- Database columns: `snake_case`
+- JavaScript/JSX variables and functions: `camelCase`
+- React components: `PascalCase`
+- React Query keys: string arrays, e.g., `['boards']`, `['board', boardId]`, `['card', cardId]`
 
 ## Where to Add New Code
 
-**New REST Resource (e.g., `attachments`):**
+**New REST Resource (e.g., `comments`):**
 
-1. Model: `backend/src/models/Attachment.js` — extend `Model`, add `init` + `associate`
-2. Register: add `require` + `init` + include in `models` object in `backend/src/models/index.js`
-3. Controller: `backend/src/controllers/attachmentController.js` — export handler functions
-4. Router: `backend/src/routes/attachments.js` — declare routes with `auth` middleware
-5. Mount: add `router.use('/', attachmentsRouter)` in `backend/src/routes/index.js`
-6. API client: `frontend/src/api/attachments.js` — export named functions using `axios.js`
-7. Hook: `frontend/src/hooks/useAttachments.js` — wrap API calls in `useQuery`/`useMutation`
+1. Create model: `backend/src/models/Comment.js` (extend `Model`, add `static associate()`)
+2. Register model: add `init` and `associate` calls in `backend/src/models/index.js`
+3. Create controller: `backend/src/controllers/commentController.js`
+4. Create route file: `backend/src/routes/comments.js`
+5. Mount router: add `router.use('/...', commentsRouter)` in `backend/src/routes/index.js`
+6. Create API module: `frontend/src/api/comments.js`
+7. Create hook: `frontend/src/hooks/useComments.js`
+8. Use hook in the relevant component or page
 
 **New Page:**
 
-- Implementation: `frontend/src/pages/<Name>Page.jsx`
-- Register route: add `<Route>` in `frontend/src/App.jsx`; wrap in `<ProtectedRoute>` if auth-required
+- Add page component: `frontend/src/pages/{Name}Page.jsx`
+- Register route: `frontend/src/App.jsx` — add `<Route>` inside `<Routes>`; wrap with `<ProtectedRoute>` if auth required
 
-**New Component:**
+**New Reusable Component:**
 
-- Implementation: `frontend/src/components/<Name>.jsx`
-- No barrel/index file required; import directly by path
+- Add to: `frontend/src/components/{ComponentName}.jsx`
+- Import from pages or other components as needed
 
-**New Utility/Helper:**
+**Shared Utilities:**
 
-- Backend shared helpers: `backend/src/utils/` (directory does not yet exist; create as needed)
-- Frontend shared helpers: `frontend/src/utils/` (directory does not yet exist; create as needed)
+- Backend: no `utils/` directory currently; add helpers inline in controllers or create `backend/src/utils/`
+- Frontend: no `utils/` directory currently; create `frontend/src/utils/` for shared helpers
 
 ## Special Directories
 
-**`.gsd/codebase/`:**
+**`frontend/dist/`:**
 
-- Purpose: GSD agent-generated analysis documents (STACK.md, ARCHITECTURE.md, etc.)
-- Generated: Yes (by GSD mapper agents)
-- Committed: Optional — useful as living documentation
+- Purpose: Vite production build output
+- Generated: Yes (by `vite build`)
+- Committed: No (in `.gitignore`)
+- Served by nginx container in production
 
-**`node_modules/` (both services):**
+**`.gsd/`:**
 
-- Generated: Yes (by npm install)
-- Committed: No
+- Purpose: GSD workflow documents (codebase analysis, plans, roadmap)
+- Generated: Yes (by GSD Copilot commands)
+- Committed: Yes
+
+**`.github/`:**
+
+- Purpose: GSD skills, agent prompts, Copilot instructions
+- Contains: `.github/skills/`, `.github/prompts/`, `.github/instructions/`, `.github/agents/`
 
 ---
 

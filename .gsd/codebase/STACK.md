@@ -6,101 +6,101 @@
 
 **Primary:**
 
-- JavaScript (ES2022+) - All backend source code (`backend/src/`)
-- JavaScript (ESM) - All frontend source code (`frontend/src/`), uses `"type": "module"`
+- JavaScript (ES2022+) — All backend source (`backend/src/**`) uses CommonJS (`require`/`module.exports`)
+- JavaScript (ESM) — All frontend source (`frontend/src/**`) uses ES Modules (`import`/`export`); enforced by `"type": "module"` in `frontend/package.json`
 
-**Secondary:**
+**Markup/Style:**
 
-- None detected
+- JSX — React component files (`.jsx`) throughout `frontend/src/`
 
 ## Runtime
 
 **Environment:**
 
-- Node.js 20 (Alpine) - specified in both `backend/Dockerfile` and `frontend/Dockerfile` via `node:20-alpine`
+- Node.js 20 (Alpine) — Both backend and frontend build stage run on `node:20-alpine` per `backend/Dockerfile` and `frontend/Dockerfile`
 
 **Package Manager:**
 
-- npm — used in both `backend/package.json` and `frontend/package.json`
-- Lockfile: `package-lock.json` present (referenced in Dockerfiles via `package-lock.json*`)
+- npm — Used in both `backend/` and `frontend/`
+- Lockfile: `package-lock.json` expected (referenced in Dockerfiles via `COPY package-lock.json* ./`)
 
 ## Frameworks
 
-**Core (Backend):**
+**Backend:**
 
-- Express 4.21 - HTTP server and REST API framework (`backend/src/index.js`)
-- Sequelize 6.37 - ORM for PostgreSQL (`backend/src/config/database.js`, `backend/src/models/`)
+- Express 4.21 — HTTP server and REST API framework; entry point `backend/src/index.js`
+- Sequelize 6.37 — ORM for PostgreSQL; models in `backend/src/models/`, config in `backend/src/config/database.js`
 
-**Core (Frontend):**
+**Frontend:**
 
-- React 18.3 - UI framework (`frontend/src/App.jsx`, `frontend/src/main.jsx`)
-- React Router DOM 6.30 - Client-side routing (`frontend/src/pages/`)
-- MUI (Material UI) 5.18 - Component library (`frontend/src/components/`)
-- @tanstack/react-query 5.90 - Server state management and data fetching (`frontend/src/hooks/`)
-- @hello-pangea/dnd 18 - Drag-and-drop for boards (`frontend/src/components/`)
+- React 18.3 — UI library; entry `frontend/src/main.jsx`, root component `frontend/src/App.jsx`
+- React Router DOM 6.30 — Client-side routing; pages in `frontend/src/pages/`
+- MUI (Material UI) 5.18 — Component library (`@mui/material`, `@mui/icons-material`)
+- Emotion 11.14 — CSS-in-JS engine required by MUI (`@emotion/react`, `@emotion/styled`)
+- TanStack React Query 5.90 — Server-state caching and data fetching; devtools included
+- @hello-pangea/dnd 18.0 — Drag-and-drop (fork of react-beautiful-dnd) for board card/list reordering
 
 **Build/Dev:**
 
-- Vite 5.4 - Frontend dev server and build tool (`frontend/vite.config.js`)
-- @vitejs/plugin-react 4.7 - Vite plugin for React JSX transform
-- nodemon 3.1 - Backend auto-reload in development
+- Vite 5.4 — Frontend dev server and production bundler; config at `frontend/vite.config.js`
+- @vitejs/plugin-react 4.7 — Babel-based React Fast Refresh plugin for Vite
+- nodemon 3.1 — Backend file watcher for development (`npm run dev`)
 
 **Serving (Production):**
 
-- nginx (Alpine) - Serves the built frontend SPA and proxies `/api/` to backend (`frontend/nginx.conf`, `frontend/Dockerfile`)
+- nginx (Alpine) — Serves the compiled React SPA and reverse-proxies `/api/` to the backend; config at `frontend/nginx.conf`
 
 ## Key Dependencies
 
-**Critical (Backend):**
+**Backend — Critical:**
 
-- `jsonwebtoken` 9.0 - JWT signing and verification (`backend/src/middleware/auth.js`, `backend/src/controllers/authController.js`)
-- `bcryptjs` 3.0 - Password hashing with salt rounds of 10 (`backend/src/controllers/authController.js`)
-- `express-validator` 7.3 - Request body validation (`backend/src/controllers/authController.js`)
-- `cors` 2.8 - Cross-origin resource sharing configured via `CORS_ORIGIN` env var (`backend/src/index.js`)
-- `cookie-parser` 1.4 - Parses httpOnly JWT cookie (`backend/src/index.js`)
-- `pg` 8.19 + `pg-hstore` 2.3 - PostgreSQL driver used by Sequelize
-- `dotenv` 16.4 - Loads `backend/.env` into `process.env` (`backend/src/index.js`)
+- `jsonwebtoken` 9.0 — Signs and verifies JWT tokens; secret read from `JWT_SECRET` env var; used in `backend/src/middleware/auth.js`
+- `bcryptjs` 3.0 — Password hashing for user credentials; used in `backend/src/controllers/authController.js`
+- `sequelize` 6.37 + `pg` 8.19 + `pg-hstore` 2.3 — Full PostgreSQL ORM stack
+- `express-validator` 7.3 — Request body validation in route handlers
+- `cors` 2.8 — CORS middleware; origin controlled by `CORS_ORIGIN` env var
+- `cookie-parser` 1.4 — Parses httpOnly cookie that carries the JWT token
+- `dotenv` 16.4 — Loads `.env` file into `process.env` at startup
 
-**Critical (Frontend):**
+**Frontend — Critical:**
 
-- `axios` 1.13 - HTTP client with a shared instance and 401 interceptor (`frontend/src/api/axios.js`)
-- `@emotion/react` + `@emotion/styled` 11.14 - CSS-in-JS runtime required by MUI
-- `date-fns` 3.6 - Date formatting utilities (`frontend/src/components/DueDatePicker.jsx`)
+- `axios` 1.13 — HTTP client; singleton configured in `frontend/src/api/axios.js` with `baseURL: '/api'` and `withCredentials: true`
+- `@tanstack/react-query` 5.90 — All API data fetching and caching
+- `@hello-pangea/dnd` 18.0 — Drag-and-drop interactions on the board
+- `date-fns` 3.6 — Date formatting utilities (e.g., `DueDatePicker.jsx`)
 
 ## Configuration
 
 **Environment (Backend):**
 
-- Configured via `backend/.env` (loaded by `dotenv` at startup)
-- Required vars:
-  - `DB_NAME` — PostgreSQL database name
-  - `DB_USER` — PostgreSQL username
-  - `DB_PASSWORD` — PostgreSQL password
-  - `DB_HOST` — Database host (defaults to `localhost`)
-  - `DB_PORT` — Database port (defaults to `5432`)
-  - `JWT_SECRET` — Secret key for JWT signing
-  - `PORT` — Server port (defaults to `5000`)
-  - `CORS_ORIGIN` — Allowed CORS origin (defaults to `http://localhost:3000`)
-  - `NODE_ENV` — Controls SQL logging and cookie `secure` flag
+- Loaded via `dotenv` at `backend/src/index.js` startup
+- Template: `backend/.env.example`
+- Required variables:
+  - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` — PostgreSQL connection
+  - `PORT` — Backend HTTP port (default `5000`)
+  - `NODE_ENV` — Controls Sequelize query logging (`development` enables it)
+  - `JWT_SECRET` — HMAC secret for signing JWTs (must be a long random string in production)
+  - `CORS_ORIGIN` — Allowed origin for CORS (default `http://localhost:3000`)
+- Runtime config file: `backend/.env` (loaded by `env_file` in `docker-compose.yml`)
 
 **Build (Frontend):**
 
-- `frontend/vite.config.js` — minimal config; no dev proxy (nginx handles routing in Docker)
-- No `.env` files used in frontend; API base URL is `/api` (relative, proxied by nginx)
+- `frontend/vite.config.js` — Minimal config; only the React plugin is registered. No proxy is needed because nginx handles `/api/` proxying in production.
+- Production build output: `/app/dist` (copied to nginx image)
 
 ## Platform Requirements
 
 **Development:**
 
-- Node.js 20+, npm
-- Docker + Docker Compose for full-stack local run (`docker-compose.yml`)
-- PostgreSQL 16 (provided by Docker service `db`)
+- Docker + Docker Compose (for full stack via `docker-compose.yml`)
+- Node.js 20+ (for running backend/frontend directly without Docker)
+- PostgreSQL 16 (provided by Docker Compose `db` service or a local instance)
 
 **Production:**
 
-- Docker containers: `db` (postgres:16-alpine), `backend` (node:20-alpine), `frontend` (nginx:alpine)
-- Backend exposed on port `5000`, frontend on port `3000` (mapped from nginx port 80)
-- Persistent volume `postgres_data` for database storage
+- Containerised: Docker Compose orchestrates three services — `db` (postgres:16-alpine), `backend` (node:20-alpine), `frontend` (nginx:alpine)
+- Backend exposed on port `5000`; frontend exposed on port `3000` (mapped from nginx port `80`)
+- Persistent storage: Docker named volume `postgres_data` for database files
 
 ---
 

@@ -5,174 +5,146 @@
 ## Naming Patterns
 
 **Files:**
-- Backend controllers: camelCase + role suffix (`authController.js`, `boardController.js`)
-- Backend models: PascalCase matching the model name (`Board.js`, `CardLabel.js`)
-- Backend middleware: camelCase (`auth.js`, `errorHandler.js`)
-- Backend routes: lowercase plural resource name (`boards.js`, `lists.js`)
-- Frontend components: PascalCase `.jsx` (`CardModal.jsx`, `ListColumn.jsx`, `BoardPage.jsx`)
-- Frontend hooks: camelCase `use`-prefixed `.js` (`useBoardDetail.js`, `useCardDetail.js`)
-- Frontend API modules: lowercase resource name `.js` (`boards.js`, `cards.js`, `axios.js`)
-- Frontend store/context: PascalCase `.jsx` (`AuthContext.jsx`)
+- Backend: `camelCase.js` for all source files (e.g., `authController.js`, `errorHandler.js`, `boardController.js`)
+- Frontend components: `PascalCase.jsx` (e.g., `CardModal.jsx`, `BoardPage.jsx`, `ListColumn.jsx`)
+- Frontend non-component files: `camelCase.js` or `camelCase.jsx` (e.g., `axios.js`, `useBoardDetail.js`, `AuthContext.jsx`)
+- Models: `PascalCase.js` matching the model class name (e.g., `Board.js`, `CardLabel.js`)
 
 **Functions:**
-- Backend controller handlers: named `async function` declarations (`async function getBoards(req, res, next)`)
-- Backend helper utilities: named `function` declarations (`function signToken(userId)`, `function safeUser(user)`)
-- Frontend React components: `const` arrow function (`const CardModal = ({ open, onClose, cardId, boardId }) => {}`)
-- Frontend hooks: exported `const` arrow function (`export const useBoardDetail = (boardId) => {}`)
-- Frontend API functions: exported `const` arrow function (`export const getBoards = () => api.get('/boards').then(r => r.data)`)
-- Exception: `AuthProvider` uses named `export function AuthProvider({ children })` instead of arrow
+- Regular functions: `camelCase` (e.g., `getBoards`, `createBoard`, `findCardWithOwnership`)
+- React components: `PascalCase` (e.g., `CardModal`, `BoardPage`, `ProtectedRoute`)
+- React hooks: `use` prefix + `PascalCase` (e.g., `useBoardDetail`, `useCreateList`, `useAuth`)
+- Express middleware functions: `camelCase` single-word description (e.g., `auth`, `errorHandler`)
+- Helper/utility functions: descriptive `camelCase` (e.g., `signToken`, `setCookieToken`, `safeUser`)
+- Validation arrays: noun + `Validation` (e.g., `registerValidation`, `loginValidation`)
 
 **Variables:**
-- JavaScript/JSX: camelCase throughout (`boardId`, `localTitle`, `queryClient`)
-- Database column names and Sequelize field names: snake_case (`user_id`, `board_id`, `password_hash`, `background_color`)
-- React state setters: `set` prefix matching the state name (`setUser`, `setLocalTitle`, `setAddingChecklist`)
-- Destructured props/data: camelCase matching the shape (`const { data: board, isPending, isError }`)
+- `camelCase` throughout both backend and frontend
+- Database column references use `snake_case` to match Sequelize field names (e.g., `user_id`, `background_color`, `password_hash`, `list_id`)
+- Boolean flags: `is` or `has` prefix (e.g., `isLoading`, `isPending`, `isError`, `addingChecklist`)
 
 **Types / Classes:**
-- Sequelize models: PascalCase ES6 class extending `Model` (`class Board extends Model`)
-- Context values: plain objects with camelCase keys (`{ user, setUser, isLoading, login, logout }`)
-- No TypeScript; no PropTypes; interfaces documented via JSDoc only
-
-## Module System
-
-**Backend:** CommonJS (`require` / `module.exports`)
-- Single named export per file: `module.exports = functionName` or `module.exports = router`
-- Controller files export a plain object of handler functions:
-  ```javascript
-  module.exports = { getBoards, createBoard, getBoardById, updateBoard, deleteBoard };
-  ```
-
-**Frontend:** ES Modules (`import` / `export`) — `"type": "module"` in `package.json`
-- React components: default export (`export default` or component const)
-- Custom hooks: named exports (`export const useBoardDetail = ...`)
-- API functions: named exports (`export const getBoards = ...`)
-- Context: named exports for both Provider and hook (`export function AuthProvider`, `export const useAuth`)
-- No barrel (`index.js`) files used in frontend; all imports use direct paths
+- Sequelize models: `PascalCase` class extending `Model` (e.g., `class Board extends Model`)
+- Context objects: `PascalCase` with `Context` suffix (e.g., `AuthContext`)
+- React Query key factories: `camelCase` object with descriptive key names (e.g., `boardKeys`, `cardKeys`)
 
 ## Code Style
 
-**Indentation:** 2 spaces (no tabs)
+**Formatting:**
+- No formatter config file present (no `.prettierrc`, `biome.json`, or `eslint.config.*`)
+- Observed style: 2-space indentation, single quotes in backend (`require`), double quotes avoided
+- Trailing commas on multi-line object/array literals (ES2017+ style)
+- Arrow functions for callbacks and short API wrappers; named `function` declarations for controllers and middleware
 
-**Quotes:** Single quotes for JS/JSX strings; double quotes inside JSX attribute values
-
-**Semicolons:** Present at end of statements
-
-**Trailing commas:** Used in multi-line objects, arrays, and parameter lists
-
-**Arrow function bodies:**
-- Single-expression API functions use implicit return: `api.get('/boards').then(r => r.data)`
-- Components and hooks use explicit block body `{}`
-
-**Formatting tools:** No Prettier or ESLint config files detected. One `// eslint-disable-line no-unused-vars` comment in `backend/src/middleware/errorHandler.js` implies ESLint is considered but not formally configured.
+**Linting:**
+- No `.eslintrc` or `eslint.config.*` file; one `// eslint-disable-line no-unused-vars` comment in `src/middleware/errorHandler.js` indicates ESLint is expected but not formally configured
 
 ## Import Organization
 
-**Frontend order (observed):**
-1. React core and built-in hooks (`import { useState, useRef, useEffect } from 'react'`)
-2. Third-party UI libraries (`@mui/material`, `@mui/icons-material`, `@hello-pangea/dnd`)
-3. State management / data-fetching libraries (`@tanstack/react-query`, `react-router-dom`)
-4. Internal hooks (`'../hooks/useBoardDetail'`)
-5. Internal API modules (`'../api/boards'`)
-6. Internal components (`'./DueDatePicker'`, `'./LabelPicker'`)
+**Backend (CommonJS):**
+1. Third-party packages (`require('bcryptjs')`, `require('express')`)
+2. Internal modules (`require('../models/index')`, `require('../middleware/auth')`)
+3. Destructured named imports follow the require call on the same or next lines
 
-**Backend order (observed):**
-1. Third-party packages (`const bcrypt = require('bcryptjs')`)  
-2. Internal modules (`const { User } = require('../models/index')`)
+**Frontend (ES Modules):**
+1. React core (`import { useState, useRef, useEffect } from 'react'`)
+2. Third-party UI / utility libraries (`@mui/material`, `@hello-pangea/dnd`, `react-router-dom`)
+3. Internal hooks (`../hooks/useBoardDetail`)
+4. Internal components (`./DueDatePicker`, `./LabelPicker`)
+5. Internal API functions (`../api/boards`)
+6. Internal context/store (`../store/AuthContext`)
 
-## Error Handling
+**Path Aliases:**
+- None configured; all imports use relative paths (`../`, `./`)
 
-**Backend pattern — async controller handlers:**
-```javascript
-async function getBoards(req, res, next) {
-  try {
-    // ... business logic
-    return res.status(200).json(result);
-  } catch (err) {
-    next(err); // delegate to global error handler
-  }
-}
-```
-- Every async handler wraps logic in `try/catch` and calls `next(err)`
-- Input validation via `express-validator` middleware arrays; validation errors return `422` with `errors.array()`
-- Business rule errors return inline JSON responses (e.g., `res.status(404).json({ message: '...' })`)
-- Global error handler in `backend/src/middleware/errorHandler.js` handles:
-  - `SequelizeUniqueConstraintError` → 409
-  - `JsonWebTokenError` / `TokenExpiredError` → 401
-  - Everything else → 500
+## Section Header Comments
 
-**Frontend pattern — React Query:**
-- Data loading states handled via `isPending` / `isError` flags from `useQuery`
-- Skeleton placeholders rendered when `isPending` is true
-- Alert component displayed when `isError` is true
-- Global 401 handling via Axios response interceptor in `frontend/src/api/axios.js` (redirects to `/login`)
+A consistent visual divider style is used throughout to separate logical sections:
 
-## Logging
-
-**Framework:** `console.error` only — no structured logging library
-
-**Patterns:**
-- Error log with `[Scope]` prefix: `console.error('[ErrorHandler]', err.name, err.message)`
-- No request-level access logging
-- No logging in controllers or other middleware
-
-## Comments
-
-**Section dividers:** Used consistently in longer files to separate logical blocks:
+**Backend:**
 ```javascript
 // ── Section Name ─────────────────────────────────────────────────────────────
 ```
 
-**JSDoc blocks:** Used for all public functions in API, hooks, and utilities:
+**Frontend (same pattern):**
 ```javascript
-/**
- * Fetch all boards belonging to the authenticated user.
- * @returns {Promise<Array>}
- */
-export const getBoards = () => api.get('/boards').then((r) => r.data);
+// ── Section Name ───────────────────────────────────────────────────────────
 ```
 
-**Component-level JSDoc:** Components include a block comment documenting props and behavior above the function:
-```jsx
-/**
- * CardModal
- *
- * Full-screen card editor dialog.
- *
- * Props:
- *   open    — boolean
- *   onClose — () => void
- *   cardId  — string
- *   boardId — string
- */
+This pattern appears in controllers, hooks, components, and middleware. Every logical grouping (remote data, local state, handlers) gets a divider.
+
+## JSDoc / Inline Comments
+
+- Every exported function in `src/api/*.js` has a `/** ... */` JSDoc block with `@param` and `@returns` tags
+- Every controller function has a JSDoc block describing the HTTP method, path, body schema, and error responses
+- Every React component and hook has a JSDoc block listing props or parameters
+- Complex algorithms (e.g., drag-and-drop midpoint strategy in `BoardPage.jsx`) get multiline inline explanatory comments
+
+## Error Handling
+
+**Backend:**
+- All async controller and middleware functions use `try/catch` → `next(err)` to forward errors to the centralized `errorHandler` middleware in `src/middleware/errorHandler.js`
+- Validation errors return `422` with `{ errors: errors.array() }` from `express-validator`
+- Not found responses return `404` with `{ message: '...' }`
+- Conflict responses return `409` with `{ message: '...' }`
+- `errorHandler` maps `SequelizeUniqueConstraintError` → `409`, JWT errors → `401`, everything else → `500`
+- Pattern: always `return res.status(...).json(...)` (explicit `return` to stop execution)
+
+**Frontend:**
+- API layer (`src/api/*.js`) functions return raw `.then((r) => r.data)` and let consumers handle errors
+- The axios instance in `src/api/axios.js` has a global response interceptor that redirects to `/login` on `401`
+- React Query `isError` / `isLoading` states are checked in component render paths (e.g., `BoardPage.jsx`, `CardModal.jsx`) to display `<Alert>` or `<Skeleton>` components
+
+## Module Design
+
+**Backend exports:**
+- Controllers export named functions individually: `module.exports = { getBoards, createBoard, ... }`
+- Middleware exports a single default function: `module.exports = auth`
+- Models export the class: `module.exports = Board`
+- Routes export the `Router` instance: `module.exports = router`
+
+**Frontend exports:**
+- API functions: named arrow function exports (`export const getBoards = () => ...`)
+- Hooks: named arrow function exports (`export const useBoardDetail = (boardId) => ...`)
+- Components: default exports (`export default function App()` or `const CardModal = ...; export default CardModal`)
+- Context provider and hook: named exports from the same file (`export function AuthProvider`, `export const useAuth`)
+
+## React Patterns
+
+**Component structure order (observed in `CardModal.jsx`, `BoardPage.jsx`):**
+1. Remote data (React Query hooks)
+2. Local state (`useState`, `useRef`)
+3. `useEffect` hooks (sync, reset)
+4. Event handlers
+5. JSX return
+
+**State management:**
+- Global auth state: React Context (`AuthContext.jsx`)
+- Server state: React Query v5 (`@tanstack/react-query`) with explicit `queryKey` factories
+- Local component state: `useState` / `useRef`
+
+**React Query key factories:**
+```javascript
+export const boardKeys = {
+  detail: (boardId) => ['board', boardId],
+};
 ```
+All mutations call `queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) })` on success.
 
-**Inline comments:** Used to explain non-obvious logic (e.g., midpoint position strategy in drag-and-drop)
+## Backend Patterns
 
-**TODO markers:** Sparingly used to flag deferred work:
-- `frontend/src/components/ListColumn.jsx:57` — `// TODO (future): call updateList mutation here`
-- `frontend/src/pages/BoardPage.jsx:210` — `// TODO: wire up card-click → open Card`
+**Ownership verification:**
+- Every write route resolves the resource and checks `resource.board.user_id !== req.user.id` before mutating
+- Helper function pattern: `findCardWithOwnership(cardId)` joins through relational chain to attach ownership context
 
-## Function Design
+**Validation:**
+- Input validation uses `express-validator` `body()` chains grouped into `*Validation` arrays applied as route middleware
+- Manual guards (`if (!title || !title.trim())`) supplement validator for simple required checks in controllers
 
-**Controller size:** 10–30 lines each; one HTTP operation per function
-
-**Parameters:**
-- Backend controllers always receive `(req, res, next)` 
-- Backend helpers receive specific typed arguments (`signToken(userId)`)
-- Frontend hooks accept minimal params (single ID string: `useBoardDetail(boardId)`)
-- React components receive destructured prop objects
-
-**Return values:**
-- Backend controllers always `return res.json(...)` to prevent implicit fallthrough
-- Hooks return the `useQuery` or `useMutation` result object directly
-- API functions return `promise.then(r => r.data)` to unwrap the Axios envelope
-
-## Validation
-
-- Backend input validation uses `express-validator` chain arrays defined as `const xyzValidation = [...]`
-- Validation arrays are composed with route handlers: `router.post('/', registerValidation, register)`
-- Validation results checked at the top of handler with `validationResult(req).isEmpty()` guard
+**Position arithmetic:**
+- List and card positions use integer spacing of `1000` (e.g., `lastCard.position + 1000`)
+- Card drag-and-drop uses floating-point midpoint strategy: `newPos = (before + after) / 2`
 
 ---
 
-_Convention analysis: 2026-03-01_
+*Convention analysis: 2026-03-01*

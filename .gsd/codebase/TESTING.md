@@ -4,94 +4,54 @@
 
 ## Test Framework
 
-**Runner:** None installed
+**Runner:** None configured
 
-Neither `backend/package.json` nor `frontend/package.json` lists a test runner, assertion library, or any testing-related devDependency. No `jest.config.*`, `vitest.config.*`, or `mocha.*` config files exist in the repository.
+No test framework is installed in either `backend/package.json` or `frontend/package.json`. There are no `jest.config.*`, `vitest.config.*`, or equivalent config files anywhere in the workspace. No test scripts are defined under `"scripts"` in either package manifest.
 
-**Assertion Library:** None
+**Test Files:** Zero test files exist in the codebase. No `*.test.*` or `*.spec.*` files were found under any directory.
 
-**Test Commands:**
-```bash
-# No test commands configured in either package.json
-# backend/package.json scripts: { "start": "node src/index.js", "dev": "nodemon src/index.js" }
-# frontend/package.json scripts: { "dev": "vite", "build": "vite build", "preview": "vite preview" }
-```
+## Current Test Coverage
 
-## Test File Organization
+**Coverage:** 0% — no automated tests of any kind exist.
 
-**Location:** No test files exist in the repository
+This applies to:
+- `backend/src/controllers/` — all seven controllers untested
+- `backend/src/middleware/` — `auth.js` and `errorHandler.js` untested
+- `backend/src/models/` — all nine Sequelize models untested
+- `backend/src/routes/` — all route definitions untested
+- `frontend/src/api/` — all seven API modules untested
+- `frontend/src/hooks/` — all three custom hook files untested
+- `frontend/src/components/` — all eleven components untested
+- `frontend/src/pages/` — all four pages untested
+- `frontend/src/store/AuthContext.jsx` — untested
 
-**Naming:** No convention established
+## Recommended Test Framework Setup
 
-**Structure:**
-```
-# No test directories found under:
-# backend/src/
-# frontend/src/
-```
-
-## Test Coverage
-
-**Requirements:** None enforced — no coverage configuration
-
-**Current coverage:** 0% — no tests exist
-
-## Recommended Setup (when adding tests)
-
-### Backend (Node/Express)
-
-Suggested stack: **Jest** + **Supertest** for integration tests
+### Backend
 
 ```bash
-npm install --save-dev jest supertest
+npm install --save-dev jest supertest @jest/globals
 ```
 
-Suggested `package.json` addition:
-```json
-"scripts": {
-  "test": "jest",
-  "test:watch": "jest --watch",
-  "test:coverage": "jest --coverage"
-},
-"jest": {
-  "testEnvironment": "node"
-}
-```
+Recommended `jest.config.js` for the backend:
 
-Suggested test file location: co-located under `backend/src/` or in `backend/tests/`:
-```
-backend/
-  tests/
-    controllers/
-      boardController.test.js
-    middleware/
-      auth.test.js
-    routes/
-      boards.test.js
-```
-
-Pattern to follow (matches existing handler style):
 ```javascript
-const request = require('supertest');
-const app = require('../../src/index');
-
-describe('GET /api/boards', () => {
-  it('returns 401 when not authenticated', async () => {
-    const res = await request(app).get('/api/boards');
-    expect(res.status).toBe(401);
-  });
-});
+module.exports = {
+  testEnvironment: 'node',
+  testMatch: ['**/__tests__/**/*.test.js', '**/*.test.js'],
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: ['src/**/*.js'],
+};
 ```
 
-### Frontend (React/Vite)
-
-Suggested stack: **Vitest** + **React Testing Library** (aligns with Vite build tooling)
+### Frontend
 
 ```bash
 npm install --save-dev vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
 ```
 
-Suggested `vite.config.js` addition:
+Recommended addition to `frontend/vite.config.js`:
+
 ```javascript
 test: {
   environment: 'jsdom',
@@ -100,75 +60,146 @@ test: {
 }
 ```
 
-Suggested test file location: co-located with component files:
+## Recommended Test File Organization
+
+**Backend — co-located `__tests__/` directories:**
+
+```
+backend/src/
+├── controllers/
+│   ├── __tests__/
+│   │   ├── authController.test.js
+│   │   ├── boardController.test.js
+│   │   ├── cardController.test.js
+│   │   └── ...
+│   └── authController.js
+├── middleware/
+│   ├── __tests__/
+│   │   ├── auth.test.js
+│   │   └── errorHandler.test.js
+│   └── auth.js
+└── models/
+    └── __tests__/
+        └── Board.test.js
+```
+
+**Frontend — co-located `__tests__/` directories:**
+
 ```
 frontend/src/
-  components/
-    CardModal.jsx
-    CardModal.test.jsx
-  hooks/
-    useBoardDetail.js
-    useBoardDetail.test.js
+├── components/
+│   └── __tests__/
+│       ├── CardModal.test.jsx
+│       └── BoardCard.test.jsx
+├── hooks/
+│   └── __tests__/
+│       └── useBoardDetail.test.js
+└── pages/
+    └── __tests__/
+        └── BoardPage.test.jsx
 ```
 
-## Mocking Strategy (recommended)
+## Recommended Test Structure
 
-**Framework:** `jest.fn()` (backend) / `vi.fn()` (frontend with Vitest)
+**Backend controller (supertest integration test):**
 
-**What to mock:**
-- Sequelize model methods (`Board.findAll`, `Board.create`) in controller unit tests
-- Axios API calls in hook tests using `vi.mock('../api/boards')`
-- `useQueryClient` when testing mutation hooks
+```javascript
+import request from 'supertest';
+import app from '../../index.js';
 
-**What NOT to mock:**
-- Business logic utilities (`signToken`, `safeUser`) — test these directly
-- React Query state management — use a real `QueryClientProvider` wrapper in component tests
-
-**Recommended React Query test wrapper:**
-```jsx
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+describe('POST /api/boards', () => {
+  it('returns 422 when title is missing', async () => {
+    const res = await request(app)
+      .post('/api/boards')
+      .set('Cookie', 'token=valid_test_token')
+      .send({});
+    expect(res.status).toBe(422);
+    expect(res.body).toHaveProperty('message');
   });
+
+  it('returns 201 with created board', async () => {
+    const res = await request(app)
+      .post('/api/boards')
+      .set('Cookie', 'token=valid_test_token')
+      .send({ title: 'My Board' });
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({ title: 'My Board' });
+  });
+});
+```
+
+**Frontend hook (React Query + Testing Library):**
+
+```javascript
+import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useBoardDetail } from '../useBoardDetail';
+import * as boardsApi from '../../api/boards';
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return ({ children }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-}
+};
+
+describe('useBoardDetail', () => {
+  it('returns board data on success', async () => {
+    vi.spyOn(boardsApi, 'getBoardById').mockResolvedValue({ id: '1', title: 'Board' });
+    const { result } = renderHook(() => useBoardDetail('1'), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual({ id: '1', title: 'Board' });
+  });
+});
 ```
 
-## Areas Requiring Test Coverage (Priority Order)
+## Mocking Guidance
 
-**High Priority — Core business logic:**
-1. `backend/src/middleware/auth.js` — JWT verification, missing token, expired token
-2. `backend/src/middleware/errorHandler.js` — Sequelize error mapping, JWT error mapping
-3. `backend/src/controllers/authController.js` — register/login validation, duplicate email
-4. `backend/src/controllers/boardController.js` — ownership checks, 404 behavior
+**Backend:**
+- Mock Sequelize model methods (`Board.findAll`, `User.findOne`, etc.) with `jest.spyOn` or `jest.mock('../models/index')`
+- Mock `bcryptjs` for auth tests to avoid real hashing overhead
+- Mock `jsonwebtoken` to control token validation in auth middleware tests
+- Use a test database (SQLite in-memory via `sequelize-mock` or a real Postgres test DB) for integration tests
 
-**Medium Priority — Frontend state:**
-1. `frontend/src/store/AuthContext.jsx` — login/logout state transitions
-2. `frontend/src/hooks/useBoardDetail.js` — mutation invalidation behavior
-3. `frontend/src/api/axios.js` — 401 interceptor redirect
+**Frontend:**
+- Mock `src/api/axios.js` at the module level: `vi.mock('../api/axios')`
+- Mock individual API functions with `vi.spyOn` (as shown above)
+- Use `msw` (Mock Service Worker) for realistic fetch/axios interception in integration tests
+- Do NOT mock React Query internals — wrap components in a real `QueryClientProvider` with `retry: false`
+- Do NOT mock child MUI components; test behavior, not implementation
 
-**Lower Priority — UI components:**
-1. `frontend/src/components/CardModal.jsx` — title/description auto-save on blur
-2. `frontend/src/pages/BoardPage.jsx` — drag-and-drop position calculation logic
+## Priority Test Areas
 
-## Test Types
+Given zero coverage, prioritize in this order:
 
-**Unit Tests:**
-- Scope: Individual functions and utilities (validators, helpers, middleware)
-- Backend examples: `signToken()`, `safeUser()`, `errorHandler()`, `auth()` middleware
+1. **`backend/src/middleware/auth.js`** — Gates all protected routes; unit test token absent, valid, expired, and user-not-found cases
+2. **`backend/src/middleware/errorHandler.js`** — Unit test each error type mapping (UniqueConstraintError, JWTError, generic)
+3. **`backend/src/controllers/authController.js`** — Integration test register (success, duplicate email, validation failure) and login (success, wrong password)
+4. **`backend/src/controllers/boardController.js`** — CRUD happy paths plus 404 ownership guard
+5. **`frontend/src/store/AuthContext.jsx`** — Unit test `login`, `logout`, and loading state
+6. **`frontend/src/hooks/useBoardDetail.js`** — Unit test each mutation's cache invalidation behavior
+7. **`frontend/src/components/CardModal.jsx`** — Render test: loading skeleton, error state, and title auto-save on blur
 
-**Integration Tests:**
-- Scope: Full HTTP request/response cycle with in-memory or test database
-- Backend examples: `POST /api/auth/register`, `GET /api/boards`, `PATCH /api/cards/:id`
+## Test Run Commands (Once Configured)
 
-**E2E Tests:**
-- Framework: Not set up — Playwright or Cypress would be appropriate additions
-- Scope: Full user flows (login → create board → add list → add card)
+**Backend (Jest):**
+
+```bash
+cd backend
+npm test                        # Run all tests
+npm test -- --watch             # Watch mode
+npm test -- --coverage          # Coverage report
+```
+
+**Frontend (Vitest):**
+
+```bash
+cd frontend
+npx vitest                      # Run all tests
+npx vitest --watch              # Watch mode
+npx vitest --coverage           # Coverage report
+```
 
 ---
 
-_Testing analysis: 2026-03-01_
+*Testing analysis: 2026-03-01*
