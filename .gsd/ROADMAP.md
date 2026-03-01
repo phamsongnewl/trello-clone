@@ -56,6 +56,13 @@ Observable behaviors that prove the phase is complete:
 | LIST-06 | Board UI updates immediately after drop (optimistic + rollback)    | ⬜ todo    |
 | FIX-01  | `reorderLists()` body key corrected from `items` to `lists`        | ⬜ todo    |
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Fix reorderLists body key + add useMoveList hook (API/hook layer)
+- [ ] 01-02-PLAN.md — Update ListColumn + AddListForm component props
+- [ ] 01-03-PLAN.md — Wire BoardPage.jsx for list drag-and-drop (board orchestration)
+
 ### Task Breakdown
 
 All tasks are in dependency order. Tasks 1–2 can be executed independently;
