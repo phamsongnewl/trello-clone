@@ -32,9 +32,9 @@ export const deleteList = async (id) => {
 /**
  * Reorder lists on a board.
  * PATCH /lists/reorder
- * Body: { items: [{ id, position }] }
+ * Body: { lists: [{ id, position }] }
  */
-export const reorderLists = async (items) => {
-  const response = await api.patch('/lists/reorder', { items });
+export const reorderLists = async (lists) => {
+  const response = await api.patch('/lists/reorder', { lists });
   return response.data;
 };
