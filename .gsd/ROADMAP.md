@@ -51,17 +51,17 @@ Observable behaviors that prove the phase is complete:
 
 | Req ID  | Description                                                        | Status     |
 | ------- | ------------------------------------------------------------------ | ---------- |
-| LIST-04 | User can drag a list column left/right to reorder it on the board  | ⬜ todo    |
-| LIST-05 | Reordered position persists after page refresh (saved to server)   | ⬜ todo    |
-| LIST-06 | Board UI updates immediately after drop (optimistic + rollback)    | ⬜ todo    |
-| FIX-01  | `reorderLists()` body key corrected from `items` to `lists`        | ⬜ todo    |
+| LIST-04 | User can drag a list column left/right to reorder it on the board  | ✅ done    |
+| LIST-05 | Reordered position persists after page refresh (saved to server)   | ✅ done    |
+| LIST-06 | Board UI updates immediately after drop (optimistic + rollback)    | ✅ done    |
+| FIX-01  | `reorderLists()` body key corrected from `items` to `lists`        | ✅ done    |
 
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Fix reorderLists body key + add useMoveList hook (API/hook layer)
-- [ ] 01-02-PLAN.md — Update ListColumn + AddListForm component props
-- [ ] 01-03-PLAN.md — Wire BoardPage.jsx for list drag-and-drop (board orchestration)
+- [x] 01-01-PLAN.md — Fix reorderLists body key + add useMoveList hook (API/hook layer)
+- [x] 01-02-PLAN.md — Update ListColumn + AddListForm component props
+- [x] 01-03-PLAN.md — Wire BoardPage.jsx for list drag-and-drop (board orchestration)
 
 ### Task Breakdown
 

@@ -9,12 +9,12 @@ See: .gsd/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: Phase 1 of 1
-Plan: 01-01 of 6 (complete); 01-02 of 6 (complete)
-Status: In progress
-Last activity: 2026-03-01 — Completed 01-01-PLAN.md (reorderLists fix + useMoveList hook)
+Phase: Phase 1 of 1 — COMPLETE ✅
+Plan: 3/3 complete
+Status: Phase complete — all plans executed, verified
+Last activity: 2026-03-01 — Phase 1 complete (list drag-and-drop verified 13/13)
 
-Progress: [██░░░░░░░░] 33%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -48,14 +48,16 @@ Recent decisions affecting current work:
 - v1.0 baseline: `type="CARD"` on list Droppables explicitly to allow future `type="LIST"` wrapper
 - v1.0 baseline: Backend `PATCH /api/lists/reorder` already implemented
 - 01-01: Body key corrected `items→lists` in reorderLists; useMoveList mirrors useMoveCard pattern
+- 01-02: ListColumn accepts dragHandleProps/isDragging; AddListForm accepts disabled prop
+- 01-03: BoardPage wired — outer Droppable type=LIST, per-column Draggable, handleDragEnd LIST branch
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-None — FIX-01 body key mismatch resolved in 01-01.
+None.
 
 ## Session Continuity
 

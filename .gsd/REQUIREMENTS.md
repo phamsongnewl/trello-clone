@@ -50,13 +50,13 @@ These shipped as the v1.0 codebase baseline and are confirmed working.
 
 ### List Reordering
 
-- [ ] **LIST-04**: User can drag a list column left/right to reorder it on the board
-- [ ] **LIST-05**: The reordered list column position persists after page refresh (saved to server)
-- [ ] **LIST-06**: Board UI reflects the new list order immediately after drop (optimistic update, rolls back on error)
+- [x] **LIST-04**: User can drag a list column left/right to reorder it on the board
+- [x] **LIST-05**: The reordered list column position persists after page refresh (saved to server)
+- [x] **LIST-06**: Board UI reflects the new list order immediately after drop (optimistic update, rolls back on error)
 
 ### Bug Fixes
 
-- [ ] **FIX-01**: Frontend `reorderLists()` sends the correct request body (`lists` key, not `items`) matching backend expectations
+- [x] **FIX-01**: Frontend `reorderLists()` sends the correct request body (`lists` key, not `items`) matching backend expectations
 
 ---
 
@@ -98,10 +98,10 @@ Tracked but out of scope for v1.1.
 
 | Requirement | Phase | Status |
 | ----------- | ----- | ------ |
-| LIST-04 | Phase 1 | Pending |
-| LIST-05 | Phase 1 | Pending |
-| LIST-06 | Phase 1 | Pending |
-| FIX-01 | Phase 1 | Pending |
+| LIST-04 | Phase 1 | Complete |
+| LIST-05 | Phase 1 | Complete |
+| LIST-06 | Phase 1 | Complete |
+| FIX-01 | Phase 1 | Complete |
 
 **Coverage:**
 
@@ -112,4 +112,4 @@ Tracked but out of scope for v1.1.
 ---
 
 _Requirements defined: 2026-03-01_
-_Last updated: 2026-03-01 — v1.1 milestone started_
+_Last updated: 2026-03-01 — Phase 1 complete; all v1.1 requirements satisfied_
