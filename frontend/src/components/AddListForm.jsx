@@ -13,7 +13,7 @@ import { useCreateList } from '../hooks/useBoardDetail';
  * Props:
  *   boardId  — ID of the board to create the list in
  */
-const AddListForm = ({ boardId }) => {
+const AddListForm = ({ boardId, disabled = false }) => {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const inputRef = useRef(null);
@@ -67,6 +67,7 @@ const AddListForm = ({ boardId }) => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleOpen}
+          disabled={disabled}
           sx={{
             backgroundColor: 'rgba(255,255,255,0.25)',
             color: 'white',
@@ -101,7 +102,7 @@ const AddListForm = ({ boardId }) => {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={handleKeyDown}
-          disabled={isPending}
+          disabled={disabled || isPending}
           fullWidth
           autoComplete="off"
         />
@@ -110,12 +111,12 @@ const AddListForm = ({ boardId }) => {
             type="submit"
             variant="contained"
             size="small"
-            disabled={isPending || !title.trim()}
+            disabled={disabled || isPending || !title.trim()}
             sx={{ flexShrink: 0 }}
           >
             {isPending ? 'Saving…' : 'Add list'}
           </Button>
-          <IconButton size="small" onClick={handleClose} disabled={isPending}>
+          <IconButton size="small" onClick={handleClose} disabled={disabled || isPending}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
