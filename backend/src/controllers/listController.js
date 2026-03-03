@@ -48,10 +48,11 @@ async function createList(req, res, next) {
 
 // ── PUT /api/lists/:id ────────────────────────────────────────────────────────
 /**
- * Update a list's title.
+ * Update a list's title and/or color.
  * Returns 404 if the list does not exist or does not belong to a board owned
  * by the authenticated user.
- * Body: { title: string }
+ * Body: { title?: string, color?: string | null }
+ *   color must be null or a valid 7-char hex string (#rrggbb).
  */
 async function updateList(req, res, next) {
   try {
@@ -63,13 +64,20 @@ async function updateList(req, res, next) {
       return res.status(404).json({ message: 'List not found' });
     }
 
-    const { title } = req.body;
+    const { title, color } = req.body;
 
     if (title !== undefined) {
       if (!title.trim()) {
         return res.status(422).json({ message: 'title cannot be empty' });
       }
       list.title = title.trim();
+    }
+
+    if (color !== undefined) {
+      if (color !== null && !/^#[0-9a-fA-F]{6}$/.test(color)) {
+        return res.status(422).json({ message: 'color must be null or a valid hex color (#rrggbb)' });
+      }
+      list.color = color;
     }
 
     await list.save();

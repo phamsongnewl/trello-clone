@@ -21,6 +21,11 @@ class List extends Model {
           type: DataTypes.UUID,
           allowNull: false,
         },
+        color: {
+          type: DataTypes.STRING(20),
+          allowNull: true,
+          defaultValue: null,
+        },
       },
       {
         sequelize,

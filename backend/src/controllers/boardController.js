@@ -1,4 +1,5 @@
 const { Board, List, Card } = require('../models/index');
+const sequelize = require('../config/database');
 
 async function getBoards(req, res, next) {
   try {
@@ -53,9 +54,24 @@ async function getBoardById(req, res, next) {
     });
     if (!board) return res.status(404).json({ message: 'Board not found' });
     const boardJson = board.toJSON();
+    
+    // Fetch color data from raw query to ensure we get the color column
+    const listsWithColor = await sequelize.query(
+      `SELECT id, color FROM lists WHERE board_id = ?`,
+      { replacements: [req.params.id], type: require('sequelize').QueryTypes.SELECT }
+    );
+    const colorMap = {};
+    listsWithColor.forEach(item => {
+      colorMap[item.id] = item.color;
+    });
+    
     boardJson.lists = (boardJson.lists || []).sort((a, b) => a.position - b.position);
     boardJson.lists.forEach((list) => {
       list.cards = (list.cards || []).sort((a, b) => a.position - b.position);
+      // Add color from the raw query
+      if (colorMap[list.id]) {
+        list.color = colorMap[list.id];
+      }
     });
     return res.status(200).json(boardJson);
   } catch (err) {

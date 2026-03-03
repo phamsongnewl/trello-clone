@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getBoardById } from '../api/boards';
-import { createList, deleteList, reorderLists } from '../api/lists';
+import { createList, deleteList, reorderLists, updateList } from '../api/lists';
 import { createCard, moveCard } from '../api/cards';
 
 // ─── Query Key Factory ───────────────────────────────────────────────────────
@@ -193,6 +193,23 @@ export const useMoveList = (boardId) => {
 
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
+    },
+  });
+};
+
+// ─── useUpdateList ───────────────────────────────────────────────────────────
+
+/**
+ * Mutation: update a list's properties (title, color).
+ * Invalidates board query on success so the list re-renders with new data.
+ */
+export const useUpdateList = (boardId) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ listId, data }) => updateList(listId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
     },
   });
 };
