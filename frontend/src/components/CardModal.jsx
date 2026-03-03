@@ -137,8 +137,8 @@ const CardModal = ({ open, onClose, cardId, boardId }) => {
 
   // ── Derived data ───────────────────────────────────────────────────────────
 
-  const checklists = Array.isArray(card?.Checklists) ? card.Checklists : [];
-  const cardLabels = Array.isArray(card?.Labels) ? card.Labels : [];
+  const checklists = Array.isArray(card?.checklists) ? card.checklists : [];
+  const cardLabels = Array.isArray(card?.labels) ? card.labels : [];
 
   // ── Render ─────────────────────────────────────────────────────────────────
 

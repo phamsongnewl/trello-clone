@@ -39,3 +39,22 @@ export const addLabelToCard = (cardId, labelId) =>
  */
 export const removeLabelFromCard = (cardId, labelId) =>
   api.delete(`/cards/${cardId}/labels/${labelId}`).then((r) => r.data);
+
+/**
+ * Update a label's name and/or color.
+ * PUT /labels/:id
+ * @param {string} labelId
+ * @param {{ name?: string, color?: string }} data
+ * @returns {Promise<Object>}
+ */
+export const updateLabel = (labelId, data) =>
+  api.put(`/labels/${labelId}`, data).then((r) => r.data);
+
+/**
+ * Delete a label from the board.
+ * DELETE /labels/:id
+ * @param {string} labelId
+ * @returns {Promise<void>}
+ */
+export const deleteLabel = (labelId) =>
+  api.delete(`/labels/${labelId}`).then((r) => r.data);

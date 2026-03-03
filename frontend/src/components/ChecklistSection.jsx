@@ -40,7 +40,7 @@ const ChecklistSection = ({ checklist, cardId }) => {
   const [addingItem, setAddingItem] = useState(false);
   const [newItemContent, setNewItemContent] = useState('');
 
-  const items = Array.isArray(checklist.ChecklistItems) ? checklist.ChecklistItems : [];
+  const items = Array.isArray(checklist.items) ? checklist.items : [];
   const totalItems = items.length;
   const checkedItems = items.filter((i) => i.is_checked).length;
   const progress = totalItems === 0 ? 0 : Math.round((checkedItems / totalItems) * 100);

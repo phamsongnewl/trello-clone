@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   Typography,
@@ -12,10 +13,21 @@ import {
   TextField,
   CircularProgress,
   Tooltip,
+  IconButton,
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import AddIcon from '@mui/icons-material/Add';
-import { useBoardLabels, useCreateLabel, useAddLabel, useRemoveLabel } from '../hooks/useCardDetail';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import {
+  cardKeys,
+  useBoardLabels,
+  useCreateLabel,
+  useUpdateLabel,
+  useDeleteLabel,
+  useAddLabel,
+  useRemoveLabel,
+} from '../hooks/useCardDetail';
 
 // ── Eight preset colours for new labels ──────────────────────────────────────
 const PRESET_COLORS = [
@@ -32,10 +44,11 @@ const PRESET_COLORS = [
 /**
  * LabelPicker
  *
- * Displays all labels that belong to the board. Labels already attached to the
- * card show a checkmark. Clicking any label toggles it on/off.
- * A "Create label" sub-form lets users add new labels with a name and one of
- * the 8 preset colours.
+ * Displays all labels that belong to the board (Trello-style: labels are
+ * board-scoped). Labels already attached to the card show a checkmark;
+ * clicking any label toggles it on/off for this card.
+ * A "Create label" sub-form creates a new board label and immediately
+ * attaches it to the current card.
  *
  * Props:
  *   cardId     — string    — the card being edited
@@ -47,11 +60,18 @@ const LabelPicker = ({ cardId, boardId, cardLabels = [] }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(PRESET_COLORS[0]);
+  // editingLabelId tracks which label row is open for inline editing
+  const [editingLabelId, setEditingLabelId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editColor, setEditColor] = useState(PRESET_COLORS[0]);
 
+  const queryClient = useQueryClient();
   const { data: boardLabels = [], isPending: labelsLoading } = useBoardLabels(boardId);
   const addLabel = useAddLabel(cardId);
   const removeLabel = useRemoveLabel(cardId);
   const createLabel = useCreateLabel(boardId);
+  const updateLabel = useUpdateLabel(boardId);
+  const deleteLabelMutation = useDeleteLabel(boardId);
 
   const attachedIds = new Set((cardLabels || []).map((l) => String(l.id)));
 
@@ -68,13 +88,48 @@ const LabelPicker = ({ cardId, boardId, cardLabels = [] }) => {
     createLabel.mutate(
       { name: newName.trim(), color: newColor },
       {
-        onSuccess: () => {
+        onSuccess: (newLabel) => {
+          // Auto-attach the newly created label to the current card so it
+          // doesn't leak into other cards as an unattached board label.
+          addLabel.mutate(newLabel.id);
           setNewName('');
           setNewColor(PRESET_COLORS[0]);
           setShowCreateForm(false);
         },
       }
     );
+  };
+
+  const handleStartEdit = (label, e) => {
+    e.stopPropagation();
+    setEditingLabelId(label.id);
+    setEditName(label.name || '');
+    setEditColor(label.color || PRESET_COLORS[0]);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingLabelId(null);
+    setEditName('');
+    setEditColor(PRESET_COLORS[0]);
+  };
+
+  const handleSaveEdit = (labelId) => {
+    if (!editName.trim()) return;
+    updateLabel.mutate(
+      { labelId, data: { name: editName.trim(), color: editColor } },
+      {
+        onSuccess: () => {
+          // Refresh card detail so the updated name/colour is reflected immediately.
+          queryClient.invalidateQueries({ queryKey: cardKeys.detail(cardId) });
+          handleCancelEdit();
+        },
+      }
+    );
+  };
+
+  const handleDeleteLabel = (labelId, e) => {
+    e.stopPropagation();
+    deleteLabelMutation.mutate(labelId);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -104,13 +159,99 @@ const LabelPicker = ({ cardId, boardId, cardLabels = [] }) => {
             const isMutating =
               (addLabel.isPending && addLabel.variables === label.id) ||
               (removeLabel.isPending && removeLabel.variables === label.id);
+            const isEditing = editingLabelId === label.id;
+            const isDeleting =
+              deleteLabelMutation.isPending && deleteLabelMutation.variables === label.id;
+
+            if (isEditing) {
+              return (
+                <ListItem key={label.id} disablePadding sx={{ flexDirection: 'column', alignItems: 'stretch', py: 0.5 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, px: 1 }}>
+                    <TextField
+                      size="small"
+                      label="Label name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      fullWidth
+                      autoFocus
+                      disabled={updateLabel.isPending}
+                    />
+                    {/* Colour swatches */}
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                      {PRESET_COLORS.map((color) => (
+                        <Tooltip key={color} title={color} arrow>
+                          <Box
+                            onClick={() => setEditColor(color)}
+                            sx={{
+                              width: 24,
+                              height: 24,
+                              borderRadius: 0.75,
+                              backgroundColor: color,
+                              cursor: 'pointer',
+                              border: editColor === color ? '3px solid' : '2px solid transparent',
+                              borderColor: editColor === color ? 'primary.main' : 'transparent',
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                        </Tooltip>
+                      ))}
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => handleSaveEdit(label.id)}
+                        disabled={updateLabel.isPending || !editName.trim()}
+                      >
+                        {updateLabel.isPending ? 'Saving…' : 'Save'}
+                      </Button>
+                      <Button size="small" onClick={handleCancelEdit} disabled={updateLabel.isPending}>
+                        Cancel
+                      </Button>
+                    </Box>
+                  </Box>
+                </ListItem>
+              );
+            }
 
             return (
-              <ListItem key={label.id} disablePadding>
+              <ListItem
+                key={label.id}
+                disablePadding
+                secondaryAction={
+                  <Box sx={{ display: 'flex', gap: 0 }}>
+                    <Tooltip title="Edit label">
+                      <span>
+                        <IconButton
+                          size="small"
+                          edge={false}
+                          onClick={(e) => handleStartEdit(label, e)}
+                          aria-label="Edit label"
+                        >
+                          <EditIcon sx={{ fontSize: 15 }} />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="Delete label">
+                      <span>
+                        <IconButton
+                          size="small"
+                          edge="end"
+                          onClick={(e) => handleDeleteLabel(label.id, e)}
+                          disabled={isDeleting}
+                          aria-label="Delete label"
+                        >
+                          <DeleteOutlineIcon sx={{ fontSize: 15 }} />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </Box>
+                }
+              >
                 <ListItemButton
                   onClick={() => handleToggle(label)}
                   disabled={isMutating}
-                  sx={{ borderRadius: 1, py: 0.5 }}
+                  sx={{ borderRadius: 1, py: 0.5, pr: 10 }}
                 >
                   {/* Colour swatch */}
                   <ListItemIcon sx={{ minWidth: 36 }}>
@@ -129,7 +270,7 @@ const LabelPicker = ({ cardId, boardId, cardLabels = [] }) => {
                     primaryTypographyProps={{ variant: 'body2' }}
                   />
 
-                  {/* Checkmark when attached */}
+                  {/* Checkmark when attached to this card */}
                   {isAttached && (
                     <CheckIcon fontSize="small" color="primary" sx={{ ml: 1 }} />
                   )}

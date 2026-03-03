@@ -3,6 +3,8 @@ import { getCard, updateCard, deleteCard } from '../api/cards';
 import {
   getBoardLabels,
   createLabel,
+  updateLabel,
+  deleteLabel,
   addLabelToCard,
   removeLabelFromCard,
 } from '../api/labels';
@@ -106,6 +108,42 @@ export const useCreateLabel = (boardId) => {
     mutationFn: (data) => createLabel(boardId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: labelKeys.board(boardId) });
+    },
+  });
+};
+
+// ─── useUpdateLabel ──────────────────────────────────────────────────────────
+
+/**
+ * Update a label's name and/or color.
+ * Invalidates the board labels list so the picker refreshes.
+ */
+export const useUpdateLabel = (boardId) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ labelId, data }) => updateLabel(labelId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: labelKeys.board(boardId) });
+    },
+  });
+};
+
+// ─── useDeleteLabel ───────────────────────────────────────────────────────────
+
+/**
+ * Delete a label from the board.
+ * Invalidates the board labels list and any open card detail that might
+ * reference the deleted label.
+ */
+export const useDeleteLabel = (boardId) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (labelId) => deleteLabel(labelId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: labelKeys.board(boardId) });
+      queryClient.invalidateQueries({ queryKey: ['card'] });
     },
   });
 };

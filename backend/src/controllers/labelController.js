@@ -32,7 +32,10 @@ async function getBoardLabels(req, res, next) {
       return res.status(404).json({ message: 'Board not found' });
     }
 
-    const labels = await Label.findAll({ where: { board_id: boardId } });
+    const labels = await Label.findAll({
+      where: { board_id: boardId },
+      order: [['createdAt', 'ASC']],
+    });
     return res.status(200).json(labels);
   } catch (err) {
     next(err);
