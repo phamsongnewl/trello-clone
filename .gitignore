@@ -1,6 +1,7 @@
-.github/
+.github/skills
+.github/agents
+.github/prompts
 .vscode/
-plans/
 node_modules/
 frontend/dist/
 .env
